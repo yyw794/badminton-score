@@ -1,0 +1,24 @@
+{
+  "eventName": "2026 马年首秀战",
+  "courtCount": 3,
+  "matches": [
+    {"id":"m1","round":1,"court":1,"type":"混双","teamA":["林锋","李祺祺"],"teamB":["王小波","谢卓珊"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m2","round":1,"court":1,"type":"男双","teamA":["罗蒙","陈顺星"],"teamB":["陈小洪","卢志辉"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m3","round":2,"court":1,"type":"女双","teamA":["唐英武","高洁"],"teamB":["崔倩男","林小连"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m4","round":3,"court":1,"type":"混双","teamA":["林锋","谢卓珊"],"teamB":["王小波","李祺祺"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m5","round":4,"court":1,"type":"男双","teamA":["严勇文","罗蒙"],"teamB":["陈顺星","陈小洪"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m6","round":5,"court":1,"type":"混双","teamA":["林锋","唐英武"],"teamB":["王小波","高洁"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m7","round":1,"court":2,"type":"男双","teamA":["严勇文","江锐"],"teamB":["罗琴荩","卢志辉"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m8","round":1,"court":2,"type":"混双","teamA":["陈顺星","崔倩男"],"teamB":["罗琴荩","唐英武"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m9","round":2,"court":2,"type":"男双","teamA":["林锋","王小波"],"teamB":["罗蒙","江锐"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m10","round":3,"court":2,"type":"女双","teamA":["李祺祺","谢卓珊"],"teamB":["高洁","林小连"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m11","round":4,"court":2,"type":"混双","teamA":["陈顺星","林小连"],"teamB":["罗琴荩","崔倩男"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m12","round":5,"court":2,"type":"男双","teamA":["严勇文","陈小洪"],"teamB":["江锐","卢志辉"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m13","round":1,"court":3,"type":"女双","teamA":["李祺祺","唐英武"],"teamB":["谢卓珊","高洁"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m14","round":2,"court":3,"type":"混双","teamA":["林锋","崔倩男"],"teamB":["陈顺星","李祺祺"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m15","round":3,"court":3,"type":"男双","teamA":["王小波","罗蒙"],"teamB":["严勇文","江锐"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m16","round":4,"court":3,"type":"女双","teamA":["唐英武","林小连"],"teamB":["崔倩男","谢卓珊"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"},
+    {"id":"m17","round":5,"court":3,"type":"混双","teamA":["王小波","林小连"],"teamB":["罗琴荩","唐英武"],"scoreA":[0,0],"scoreB":[0,0],"status":"pending"}
+  ],
+  "playerStats": {}
+}
