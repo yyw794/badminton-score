@@ -1,0 +1,375 @@
+{
+  "eventName": "2026 马年首秀战",
+  "courtCount": 3,
+  "matches": [
+    {
+      "id": "m1",
+      "round": 1,
+      "court": 1,
+      "type": "男双",
+      "teamA": [
+        "罗蒙",
+        "陈小洪"
+      ],
+      "teamB": [
+        "严勇文",
+        "罗琴荩"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m2",
+      "round": 2,
+      "court": 1,
+      "type": "男双",
+      "teamA": [
+        "严勇文",
+        "卢志辉"
+      ],
+      "teamB": [
+        "陈小洪",
+        "江锐"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m3",
+      "round": 3,
+      "court": 1,
+      "type": "男双",
+      "teamA": [
+        "严勇文",
+        "林锋"
+      ],
+      "teamB": [
+        "卢志辉",
+        "江锐"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m4",
+      "round": 4,
+      "court": 1,
+      "type": "混双",
+      "teamA": [
+        "林锋",
+        "李祺祺"
+      ],
+      "teamB": [
+        "罗琴荩",
+        "高洁"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m5",
+      "round": 5,
+      "court": 1,
+      "type": "女双",
+      "teamA": [
+        "唐英武",
+        "高洁"
+      ],
+      "teamB": [
+        "李祺祺",
+        "谢卓珊"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m6",
+      "round": 6,
+      "court": 1,
+      "type": "男双",
+      "teamA": [
+        "王小波",
+        "罗琴荩"
+      ],
+      "teamB": [
+        "罗蒙",
+        "卢志辉"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m7",
+      "round": 1,
+      "court": 2,
+      "type": "混双",
+      "teamA": [
+        "王小波",
+        "崔倩男"
+      ],
+      "teamB": [
+        "陈顺星",
+        "高洁"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m8",
+      "round": 2,
+      "court": 2,
+      "type": "混双",
+      "teamA": [
+        "陈顺星",
+        "谢卓珊"
+      ],
+      "teamB": [
+        "罗琴荩",
+        "唐英武"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m9",
+      "round": 3,
+      "court": 2,
+      "type": "男双",
+      "teamA": [
+        "王小波",
+        "陈小洪"
+      ],
+      "teamB": [
+        "罗蒙",
+        "陈顺星"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m10",
+      "round": 4,
+      "court": 2,
+      "type": "混双",
+      "teamA": [
+        "王小波",
+        "谢卓珊"
+      ],
+      "teamB": [
+        "陈顺星",
+        "唐英武"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m11",
+      "round": 5,
+      "court": 2,
+      "type": "混双",
+      "teamA": [
+        "陈顺星",
+        "李祺祺"
+      ],
+      "teamB": [
+        "罗琴荩",
+        "高洁"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m12",
+      "round": 1,
+      "court": 3,
+      "type": "混双",
+      "teamA": [
+        "王小波",
+        "李祺祺"
+      ],
+      "teamB": [
+        "林锋",
+        "崔倩男"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m13",
+      "round": 2,
+      "court": 3,
+      "type": "女双",
+      "teamA": [
+        "谢卓珊",
+        "唐英武"
+      ],
+      "teamB": [
+        "李祺祺",
+        "崔倩男"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m14",
+      "round": 3,
+      "court": 3,
+      "type": "女双",
+      "teamA": [
+        "唐英武",
+        "高洁"
+      ],
+      "teamB": [
+        "崔倩男",
+        "谢卓珊"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m15",
+      "round": 4,
+      "court": 3,
+      "type": "男双",
+      "teamA": [
+        "罗蒙",
+        "林锋"
+      ],
+      "teamB": [
+        "卢志辉",
+        "江锐"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "m16",
+      "round": 5,
+      "court": 3,
+      "type": "男双",
+      "teamA": [
+        "陈小洪",
+        "江锐"
+      ],
+      "teamB": [
+        "罗蒙",
+        "卢志辉"
+      ],
+      "scoreA": [
+        0,
+        0
+      ],
+      "scoreB": [
+        0,
+        0
+      ],
+      "status": "pending"
+    }
+  ],
+  "playerStats": {}
+}
