@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadData();
     renderMatches();
     updateEventName();
+    switchCourt(1);  // 初始化时切换到 1 号场地，确保 tab 样式正确
 });
 
 // ==================== 数据持久化 ====================
