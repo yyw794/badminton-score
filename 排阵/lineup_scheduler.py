@@ -160,9 +160,9 @@ def select_balanced_matches(
         """评分越低越优先被选中。
         
         评分规则：
-        1. 有固定场次要求的球员：未完成时减分（优先）
-        2. 出场次数少的球员：减分（优先）
-        3. 出场次数多的球员：加分（靠后）
+        1. 有固定场次要求的球员：未完成时大幅减分（最优先）
+        2. 出场次数少的球员：大幅减分（优先）
+        3. 接近最大场次的球员：大幅加分（靠后）
         4. 固定搭档组合：减分（优先）
         """
         match_players = get_match_players(match)
@@ -176,16 +176,23 @@ def select_balanced_matches(
             fixed_games = constraint.get("fixed_games")
             score = 0
             
-            # 固定场次要求：未完成时减分
+            # 固定场次要求：未完成时大幅减分（最优先）
             if fixed_games is not None:
                 remaining = fixed_games - games
                 if remaining > 0:
-                    score -= remaining * 300
+                    score -= remaining * 1000
             
-            # 出场次数少的球员优先
+            # 出场次数少的球员优先：差距越大越优先
             if active_games:
                 diff_from_avg = avg_games - games
-                score -= diff_from_avg * 100
+                if diff_from_avg > 0:
+                    score -= diff_from_avg * 200
+                else:
+                    score += diff_from_avg * 100
+            
+            # 接近最大场次的球员：大幅加分（靠后）
+            if MAX_GAMES_PER_PLAYER and games >= MAX_GAMES_PER_PLAYER - 1:
+                score += 1500
             
             scores.append(score)
 
@@ -194,7 +201,7 @@ def select_balanced_matches(
             pair_key = get_pair_key(pair[0], pair[1])
             if pair_key in FIXED_PARTNERS:
                 weight = FIXED_PARTNERS[pair_key]
-                scores.append(-weight * 20)
+                scores.append(-weight * 30)
 
         return sum(scores) / len(scores) if scores else float('inf')
 
@@ -206,21 +213,28 @@ def select_balanced_matches(
     random.shuffle(mens_pool)
     random.shuffle(womens_pool)
 
-    # 预设比赛类型比例
-    mixed_count = total_matches // 2
-    mens_count = total_matches // 3
-    womens_count = total_matches - mixed_count - mens_count
-    match_types = ["mixed"] * mixed_count + ["mens"] * mens_count + ["womens"] * womens_count
-    random.shuffle(match_types)
+    # 预设比赛类型比例和目标数量
+    mixed_target = total_matches // 2  # 混双约 50%
+    mens_target = total_matches // 3   # 男双约 33%
+    womens_target = total_matches - mixed_target - mens_target  # 女双剩余
+    
+    mixed_used = 0
+    mens_used = 0
+    womens_used = 0
 
     rounds = []
     current_round = []
     total_rounds = (total_matches + court_count - 1) // court_count
 
-    for match_idx, match_type in enumerate(match_types):
-        pool = {"mixed": mixed_pool, "mens": mens_pool, "womens": womens_pool}[match_type]
+    def try_add_match(pool, match_type_name, current_count, target_count):
+        """尝试添加一场比赛到当前轮次，返回是否成功。"""
+        nonlocal current_round, mixed_used, mens_used, womens_used
+        
+        # 如果已达到目标数量，跳过（除非其他类型都无法添加）
+        if current_count >= target_count + 2:  # 允许稍微超出
+            return False, current_count
+        
         current_round_num = len(rounds) + 1
-
         best_match = None
         best_score = float('inf')
 
@@ -234,7 +248,7 @@ def select_balanced_matches(
 
         if best_match:
             current_round.append({
-                "type": {"mixed": "混双", "mens": "男双", "womens": "女双"}[match_type],
+                "type": {"mixed": "混双", "mens": "男双", "womens": "女双"}[match_type_name],
                 "match": best_match
             })
             for player in get_match_players(best_match):
@@ -245,14 +259,71 @@ def select_balanced_matches(
                 if pair_key in partner_games:
                     partner_games[pair_key] += 1
             pool.remove(best_match)
+            
+            # 更新计数
+            if match_type_name == "mixed":
+                mixed_used += 1
+            elif match_type_name == "mens":
+                mens_used += 1
+            else:
+                womens_used += 1
+            
+            return True, current_count + 1
+        return False, current_count
 
-            if len(current_round) >= court_count:
-                rounds.append(current_round)
-                current_round = []
-        else:
-            if current_round:
-                rounds.append(current_round)
-                current_round = []
+    # 多轮填充：每轮尝试填满所有场地
+    # 轮转优先级：混双 > 女双 > 男双
+    type_priorities = [
+        ("mixed", lambda: mixed_used, lambda: mixed_target, mixed_pool),
+        ("womens", lambda: womens_used, lambda: womens_target, womens_pool),
+        ("mens", lambda: mens_used, lambda: mens_target, mens_pool),
+    ]
+    
+    for round_num in range(total_rounds):
+        current_round = []
+        
+        # 尝试填满当前轮次的所有场地
+        for court_slot in range(court_count):
+            added = False
+            
+            # 按优先级尝试每种比赛类型
+            for match_type, get_used, get_target, pool in type_priorities:
+                if not pool:
+                    continue
+                success, new_count = try_add_match(pool, match_type, get_used(), get_target())
+                if success:
+                    added = True
+                    # 更新计数
+                    if match_type == "mixed":
+                        mixed_used = new_count
+                    elif match_type == "womens":
+                        womens_used = new_count
+                    else:
+                        mens_used = new_count
+                    break
+            
+            # 如果优先级类型都无法添加，尝试所有类型
+            if not added:
+                for match_type, get_used, get_target, pool in type_priorities:
+                    if not pool:
+                        continue
+                    # 放宽限制
+                    success, new_count = try_add_match(pool, match_type, 0, 999)
+                    if success:
+                        added = True
+                        if match_type == "mixed":
+                            mixed_used = new_count
+                        elif match_type == "womens":
+                            womens_used = new_count
+                        else:
+                            mens_used = new_count
+                        break
+            
+            if not added:
+                break
+        
+        if current_round:
+            rounds.append(current_round)
 
     all_matches = []
     for round_matches in rounds:
