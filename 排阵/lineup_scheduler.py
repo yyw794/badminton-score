@@ -38,7 +38,7 @@ FIXED_PARTNERS = {
 }
 
 # Global config
-MATCHES_PER_COURT = 6  # 3 场地 × 6 场 = 18 场，18×4=72 人次，接近 14×5=70 人次上限
+MATCHES_PER_COURT = 6
 MAX_GAMES_PER_PLAYER = 5
 
 
@@ -160,8 +160,8 @@ def select_balanced_matches(
         """评分越低越优先被选中。
         
         评分规则：
-        1. 有固定场次要求的球员：未完成时大幅减分（优先）
-        2. 出场次数少的球员：大幅减分（优先）
+        1. 有固定场次要求的球员：未完成时减分（优先）
+        2. 出场次数少的球员：减分（优先）
         3. 出场次数多的球员：加分（靠后）
         4. 固定搭档组合：减分（优先）
         """
@@ -176,28 +176,16 @@ def select_balanced_matches(
             fixed_games = constraint.get("fixed_games")
             score = 0
             
-            # 固定场次要求：未完成时大幅减分（最高优先级之一）
+            # 固定场次要求：未完成时减分
             if fixed_games is not None:
                 remaining = fixed_games - games
                 if remaining > 0:
-                    score -= remaining * 500  # 大幅提高权重
+                    score -= remaining * 300
             
-            # 出场次数少的球员优先：与平均值差距越大，越优先
+            # 出场次数少的球员优先
             if active_games:
                 diff_from_avg = avg_games - games
-                if diff_from_avg > 0:
-                    # 低于平均值的减分，差距越大减分越多
-                    score -= diff_from_avg * 300
-                    # 额外奖励：如果远低于平均值，再减分
-                    if diff_from_avg >= 2:
-                        score -= 500
-                else:
-                    # 高于平均值的加分
-                    score += diff_from_avg * 150
-            
-            # 接近最大场次的球员：大幅加分（靠后）
-            if MAX_GAMES_PER_PLAYER and games >= MAX_GAMES_PER_PLAYER - 1:
-                score += 2000  # 接近上限的靠后
+                score -= diff_from_avg * 100
             
             scores.append(score)
 
@@ -206,7 +194,7 @@ def select_balanced_matches(
             pair_key = get_pair_key(pair[0], pair[1])
             if pair_key in FIXED_PARTNERS:
                 weight = FIXED_PARTNERS[pair_key]
-                scores.append(-weight * 50)  # 提高固定搭档权重
+                scores.append(-weight * 20)
 
         return sum(scores) / len(scores) if scores else float('inf')
 
@@ -218,11 +206,10 @@ def select_balanced_matches(
     random.shuffle(mens_pool)
     random.shuffle(womens_pool)
 
-    # 优化比赛类型比例：确保女性球员充分利用，男性球员也能达到 5 场
-    # 女双：~11% (2 场)，混双：~44% (8 场)，男双：~44% (8 场)
-    womens_count = max(2, total_matches // 9)  # 至少 2 场女双
-    mixed_count = (total_matches - womens_count) * 4 // 7  # 混双占剩余的大约 4/7
-    mens_count = total_matches - mixed_count - womens_count  # 剩余为男双
+    # 预设比赛类型比例
+    mixed_count = total_matches // 2
+    mens_count = total_matches // 3
+    womens_count = total_matches - mixed_count - mens_count
     match_types = ["mixed"] * mixed_count + ["mens"] * mens_count + ["womens"] * womens_count
     random.shuffle(match_types)
 
@@ -230,53 +217,42 @@ def select_balanced_matches(
     current_round = []
     total_rounds = (total_matches + court_count - 1) // court_count
 
-    # 多轮尝试，确保尽可能填满比赛
-    max_attempts = 3
-    for attempt in range(max_attempts):
-        for match_idx, match_type in enumerate(match_types):
-            pool = {"mixed": mixed_pool, "mens": mens_pool, "womens": womens_pool}[match_type]
-            if not pool:
+    for match_idx, match_type in enumerate(match_types):
+        pool = {"mixed": mixed_pool, "mens": mens_pool, "womens": womens_pool}[match_type]
+        current_round_num = len(rounds) + 1
+
+        best_match = None
+        best_score = float('inf')
+
+        for match in pool:
+            if not can_add_match(match, current_round, current_round_num, total_rounds):
                 continue
-            current_round_num = len(rounds) + 1
+            score = get_match_score(match, current_round_num)
+            if score < best_score:
+                best_score = score
+                best_match = match
 
-            best_match = None
-            best_score = float('inf')
+        if best_match:
+            current_round.append({
+                "type": {"mixed": "混双", "mens": "男双", "womens": "女双"}[match_type],
+                "match": best_match
+            })
+            for player in get_match_players(best_match):
+                player_games[player] += 1
+            pair_a, pair_b = best_match
+            for pair in [pair_a, pair_b]:
+                pair_key = get_pair_key(pair[0], pair[1])
+                if pair_key in partner_games:
+                    partner_games[pair_key] += 1
+            pool.remove(best_match)
 
-            for match in pool:
-                if not can_add_match(match, current_round, current_round_num, total_rounds):
-                    continue
-                score = get_match_score(match, current_round_num)
-                if score < best_score:
-                    best_score = score
-                    best_match = match
-
-            if best_match:
-                current_round.append({
-                    "type": {"mixed": "混双", "mens": "男双", "womens": "女双"}[match_type],
-                    "match": best_match
-                })
-                for player in get_match_players(best_match):
-                    player_games[player] += 1
-                pair_a, pair_b = best_match
-                for pair in [pair_a, pair_b]:
-                    pair_key = get_pair_key(pair[0], pair[1])
-                    if pair_key in partner_games:
-                        partner_games[pair_key] += 1
-                pool.remove(best_match)
-
-                if len(current_round) >= court_count:
-                    rounds.append(current_round)
-                    current_round = []
-            else:
-                if current_round:
-                    rounds.append(current_round)
-                    current_round = []
-        
-        # 如果还有剩余比赛，打乱顺序再试
-        if any(len(pool) > 0 for pool in [mixed_pool, mens_pool, womens_pool]):
-            random.shuffle(match_types)
+            if len(current_round) >= court_count:
+                rounds.append(current_round)
+                current_round = []
         else:
-            break
+            if current_round:
+                rounds.append(current_round)
+                current_round = []
 
     all_matches = []
     for round_matches in rounds:
