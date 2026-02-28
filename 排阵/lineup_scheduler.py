@@ -30,6 +30,7 @@ MIXED_DOUBLES_MALES = {"林锋", "王小波", "陈顺星", "罗琴荩"}
 PLAYER_CONSTRAINTS = {
     "严勇文": {"fixed_games": 3, "early_departure": True},
     "崔倩男": {"fixed_games": 4, "early_departure": True},
+    "林小连": {"only_womens_doubles": True},  # 只打女双
 }
 
 # Fixed partner pairs
@@ -72,10 +73,14 @@ def get_court_count(total_players: int) -> int:
 def generate_mixed_doubles_matches(males: List[str], females: List[str]) -> List[Tuple[Tuple[str, str], Tuple[str, str]]]:
     """Generate mixed doubles matches."""
     mixed_males = [m for m in males if m in MIXED_DOUBLES_MALES]
+    
+    # 过滤只打女双的球员
+    mixed_females = [f for f in females if not PLAYER_CONSTRAINTS.get(f, {}).get("only_womens_doubles")]
+    
     matches = []
 
     for male_pair in itertools.combinations(mixed_males, 2):
-        for female_pair in itertools.combinations(females, 2):
+        for female_pair in itertools.combinations(mixed_females, 2):
             match = ((male_pair[0], female_pair[0]), (male_pair[1], female_pair[1]))
             matches.append(match)
 
@@ -151,7 +156,21 @@ def select_balanced_matches(
         return True
 
     def can_add_match(match, current_round_matches, round_num, total_rounds):
+        match_type = None
+        for m in current_round_matches:
+            if m.get("type"):
+                match_type = m["type"]
+                break
+        
         for player in get_match_players(match):
+            # 检查特殊约束：只打女双的球员不能参加混双
+            constraint = get_constraint(player)
+            if constraint.get("only_womens_doubles"):
+                # 如果当前比赛不是女双，该球员不能参加
+                if match_type and match_type != "女双":
+                    # 检查当前轮次是否有女双比赛可以安排
+                    pass  # 在 try_add_match 中处理
+            
             if not can_player_play(player, current_round_matches, round_num, total_rounds):
                 return False
         return True
@@ -230,16 +249,27 @@ def select_balanced_matches(
     def try_add_match(pool, match_type_name, current_count, target_count):
         """尝试添加一场比赛到当前轮次，返回是否成功。"""
         nonlocal current_round, mixed_used, mens_used, womens_used
-        
+
         # 如果已达到目标数量，跳过（除非其他类型都无法添加）
         if current_count >= target_count + 2:  # 允许稍微超出
             return False, current_count
-        
+
         current_round_num = len(rounds) + 1
         best_match = None
         best_score = float('inf')
 
         for match in pool:
+            # 检查是否有球员不能参加该类型的比赛
+            can_play = True
+            for player in get_match_players(match):
+                constraint = get_constraint(player)
+                if constraint.get("only_womens_doubles") and match_type_name != "womens":
+                    can_play = False
+                    break
+            
+            if not can_play:
+                continue
+                
             if not can_add_match(match, current_round, current_round_num, total_rounds):
                 continue
             score = get_match_score(match, current_round_num)
@@ -260,7 +290,7 @@ def select_balanced_matches(
                 if pair_key in partner_games:
                     partner_games[pair_key] += 1
             pool.remove(best_match)
-            
+
             # 更新计数
             if match_type_name == "mixed":
                 mixed_used += 1
@@ -268,7 +298,7 @@ def select_balanced_matches(
                 mens_used += 1
             else:
                 womens_used += 1
-            
+
             return True, current_count + 1
         return False, current_count
 
