@@ -1,0 +1,14 @@
+[project]
+name = "pingan-tech-badminton-team"
+version = "0.1.0"
+description = "Badminton lineup scheduler for mixed doubles, men's doubles, and women's doubles"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "openpyxl>=3.0.0",
+]
+
+[[tool.uv.index]]
+name = "pingan"
+url = "http://maven.paic.com.cn/repository/pypi/simple/"
+publish-url = "http://maven.paic.com.cn/repository/pypi"
