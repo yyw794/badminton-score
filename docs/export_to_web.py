@@ -101,9 +101,10 @@ def parse_excel_to_json(excel_path: str, output_path: str, event_name: str = Non
 
 def main():
     """主函数：从默认路径读取 Excel 并导出 JSON。"""
-    # 默认路径
+    # 默认路径：docs 目录的上一级是项目根目录
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    excel_path = os.path.join(script_dir, "../对阵表.xlsx")
+    project_dir = os.path.dirname(script_dir)  # 项目根目录
+    excel_path = os.path.join(project_dir, "排阵/对阵表.xlsx")
     output_path = os.path.join(script_dir, "data.json")
     
     # 从命令行参数获取路径（可选）
@@ -115,7 +116,7 @@ def main():
     
     # 提取赛事名称（从微信接龙文件名）
     event_name = "羽毛球训练赛"
-    signup_file = os.path.join(script_dir, "../微信接龙.txt")
+    signup_file = os.path.join(project_dir, "排阵/微信接龙.txt")
     if os.path.exists(signup_file):
         with open(signup_file, "r", encoding="utf-8") as f:
             first_line = f.readline().strip()
@@ -129,8 +130,8 @@ def main():
     
     parse_excel_to_json(excel_path, output_path, event_name)
     print(f"\n使用方法:")
-    print(f"  1. 将 {output_path} 复制到 web 应用目录")
-    print(f"  2. 打开 index.html 即可使用")
+    print(f"  1. 打开 docs/index.html 即可使用 Web 记分功能")
+    print(f"  2. 数据已自动更新到 docs/data.json")
 
 
 if __name__ == "__main__":
