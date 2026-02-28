@@ -115,21 +115,45 @@ def main():
     excel_path = os.path.join(project_dir, "排阵/对阵表.xlsx")
     output_path = os.path.join(script_dir, "data.json")
     
-    # 从命令行参数获取路径（可选）
-    import sys
+    # 从命令行参数获取路径和活动名称
+    event_name = None
     if len(sys.argv) > 1:
-        excel_path = sys.argv[1]
+        if sys.argv[1].startswith("-"):
+            # 跳过选项参数
+            pass
+        else:
+            event_name = sys.argv[1]
     if len(sys.argv) > 2:
         output_path = sys.argv[2]
     
-    # 提取赛事名称（从微信接龙文件名）
-    event_name = "羽毛球训练赛"
-    signup_file = os.path.join(project_dir, "排阵/微信接龙.txt")
-    if os.path.exists(signup_file):
-        with open(signup_file, "r", encoding="utf-8") as f:
-            first_line = f.readline().strip()
-            if first_line and not first_line.startswith("#"):
-                event_name = first_line.replace("2026 ", "").replace("#", "")
+    # 如果没有传入活动名称，从微信接龙文件提取
+    if event_name is None:
+        signup_file = os.path.join(project_dir, "排阵/微信接龙.txt")
+        if os.path.exists(signup_file):
+            with open(signup_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        # 尝试提取日期
+                        import re
+                        # 支持格式：2026-02-28, 2 月 28 日，02-28
+                        match = re.search(r'(\d{4}-\d{2}-\d{2}|\d{1,2} 月\d{1,2} 日|\d{1,2}-\d{1,2})', line)
+                        if match:
+                            date_str = match.group(1)
+                            # 标准化日期格式
+                            if '月' in date_str and '日' in date_str:
+                                parts = date_str.replace('月', '-').replace('日', '').split('-')
+                                date_str = f"2026-{parts[0].zfill(2)}-{parts[1].zfill(2)}"
+                            elif '-' in date_str and len(date_str) == 5:
+                                parts = date_str.split('-')
+                                date_str = f"2026-{parts[0].zfill(2)}-{parts[1].zfill(2)}"
+                            event_name = f"{date_str} 活动"
+                        else:
+                            event_name = "羽毛球训练赛"
+                        break
+    
+    if event_name is None:
+        event_name = "羽毛球训练赛"
     
     if not os.path.exists(excel_path):
         print(f"✗ 错误：找不到 Excel 文件 {excel_path}")
