@@ -559,10 +559,11 @@ function exportData() {
     const dataStr = JSON.stringify(appData, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${appData.eventName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0,10)}.json`;
+    // 文件名：活动名称_比分数据.json
+    a.download = `${appData.eventName.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}_比分数据.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
