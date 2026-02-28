@@ -39,7 +39,7 @@ FIXED_PARTNERS = {
 
 # Global config
 MATCHES_PER_COURT = 6
-MAX_GAMES_PER_PLAYER = 5
+MAX_GAMES_PER_PLAYER = 6  # 提高到 6，让球员更容易达到 5 场
 
 
 def parse_signup(signup_text: str) -> Tuple[List[str], List[str]]:
@@ -161,15 +161,18 @@ def select_balanced_matches(
         
         评分规则：
         1. 有固定场次要求的球员：未完成时大幅减分（最优先）
-        2. 出场次数少的球员：大幅减分（优先）
-        3. 接近最大场次的球员：大幅加分（靠后）
-        4. 固定搭档组合：减分（优先）
+        2. 未达到 5 场的球员：减分（优先）
+        3. 达到 5 场的球员：小幅加分（靠后）
+        4. 达到 6 场的球员：大幅加分（最后）
+        5. 固定搭档组合：减分（优先）
         """
         match_players = get_match_players(match)
         scores = []
         active_games = [g for p, g in player_games.items() if g > 0]
         avg_games = sum(active_games) / len(active_games) if active_games else 0
 
+        TARGET_GAMES = 5  # 目标场次
+        
         for player in match_players:
             constraint = get_constraint(player)
             games = player_games[player]
@@ -182,17 +185,15 @@ def select_balanced_matches(
                 if remaining > 0:
                     score -= remaining * 1000
             
-            # 出场次数少的球员优先：差距越大越优先
-            if active_games:
-                diff_from_avg = avg_games - games
-                if diff_from_avg > 0:
-                    score -= diff_from_avg * 200
-                else:
-                    score += diff_from_avg * 100
-            
-            # 接近最大场次的球员：大幅加分（靠后）
-            if MAX_GAMES_PER_PLAYER and games >= MAX_GAMES_PER_PLAYER - 1:
-                score += 1500
+            # 未达到目标场次的球员优先
+            if games < TARGET_GAMES:
+                score -= (TARGET_GAMES - games) * 200
+            elif games >= MAX_GAMES_PER_PLAYER:
+                # 达到最大场次，大幅加分（靠后）
+                score += 2000
+            else:
+                # 达到 5 场但未到 6 场，小幅加分
+                score += (games - TARGET_GAMES) * 100
             
             scores.append(score)
 
@@ -272,10 +273,10 @@ def select_balanced_matches(
         return False, current_count
 
     # 多轮填充：每轮尝试填满所有场地
-    # 轮转优先级：混双 > 女双 > 男双
+    # 优先级：女双 > 混双 > 男双（确保女性球员先安排女双）
     type_priorities = [
+        ("womens", lambda: womens_used, lambda: womens_target + 2, womens_pool),  # 女双最优先
         ("mixed", lambda: mixed_used, lambda: mixed_target, mixed_pool),
-        ("womens", lambda: womens_used, lambda: womens_target, womens_pool),
         ("mens", lambda: mens_used, lambda: mens_target, mens_pool),
     ]
     
