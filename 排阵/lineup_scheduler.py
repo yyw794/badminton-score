@@ -38,7 +38,7 @@ FIXED_PARTNERS = {
 }
 
 # Global config
-MATCHES_PER_COURT = 6
+MATCHES_PER_COURT = 10  # 增加到 10 场，确保更多人能达到 5 场
 MAX_GAMES_PER_PLAYER = 5
 
 
@@ -157,6 +157,14 @@ def select_balanced_matches(
         return True
 
     def get_match_score(match, round_num):
+        """评分越低越优先被选中。
+        
+        评分规则：
+        1. 有固定场次要求的球员：未完成时大幅减分（优先）
+        2. 出场次数少的球员：大幅减分（优先）
+        3. 出场次数多的球员：加分（靠后）
+        4. 固定搭档组合：减分（优先）
+        """
         match_players = get_match_players(match)
         scores = []
         active_games = [g for p, g in player_games.items() if g > 0]
@@ -166,15 +174,31 @@ def select_balanced_matches(
             constraint = get_constraint(player)
             games = player_games[player]
             fixed_games = constraint.get("fixed_games")
-            score = games * 50
-            if active_games and games > avg_games + 1:
-                score += (games - avg_games) * 100
+            score = 0
+            
+            # 固定场次要求：未完成时大幅减分（最高优先级之一）
             if fixed_games is not None:
                 remaining = fixed_games - games
                 if remaining > 0:
-                    score -= remaining * 80
-                    if games < avg_games - 1:
-                        score -= 200
+                    score -= remaining * 500  # 大幅提高权重
+            
+            # 出场次数少的球员优先：与平均值差距越大，越优先
+            if active_games:
+                diff_from_avg = avg_games - games
+                if diff_from_avg > 0:
+                    # 低于平均值的减分，差距越大减分越多
+                    score -= diff_from_avg * 300
+                    # 额外奖励：如果远低于平均值，再减分
+                    if diff_from_avg >= 2:
+                        score -= 500
+                else:
+                    # 高于平均值的加分
+                    score += diff_from_avg * 150
+            
+            # 接近最大场次的球员：大幅加分（靠后）
+            if MAX_GAMES_PER_PLAYER and games >= MAX_GAMES_PER_PLAYER - 1:
+                score += 2000  # 接近上限的靠后
+            
             scores.append(score)
 
         pair_a, pair_b = match
@@ -182,7 +206,7 @@ def select_balanced_matches(
             pair_key = get_pair_key(pair[0], pair[1])
             if pair_key in FIXED_PARTNERS:
                 weight = FIXED_PARTNERS[pair_key]
-                scores.append(-weight * 2)
+                scores.append(-weight * 50)  # 提高固定搭档权重
 
         return sum(scores) / len(scores) if scores else float('inf')
 
