@@ -79,8 +79,15 @@ function loadData() {
             appData.matches = [...DEFAULT_MATCHES];
         }
     } else {
-        // 首次访问时，尝试从 data.json 加载
-        fetch('data.json')
+        // 首次访问时，从 data.json 加载（禁用缓存）
+        // 添加时间戳参数，绕过浏览器缓存
+        fetch('data.json?t=' + Date.now(), {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        })
             .then(res => res.json())
             .then(data => {
                 if (data.eventName) {
@@ -113,6 +120,60 @@ function loadData() {
 
 function saveData() {
     localStorage.setItem('badminton_match_data', JSON.stringify(appData));
+}
+
+// 从服务器刷新数据
+function refreshData() {
+    if (!confirm('🔄 从服务器刷新数据？\n\n这将重新加载最新的对阵数据，但您在本地录入的比分将保留。\n\n确定继续吗？')) {
+        return;
+    }
+    
+    fetch('data.json?t=' + Date.now(), {
+        cache: 'no-cache',
+        headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        // 保留本地比分数据
+        const localScores = {};
+        appData.matches.forEach(m => {
+            if (m.status !== 'pending') {
+                localScores[m.id] = {
+                    scoreA: m.scoreA,
+                    scoreB: m.scoreB,
+                    status: m.status
+                };
+            }
+        });
+        
+        // 更新数据
+        if (data.eventName) appData.eventName = data.eventName;
+        if (data.courtCount) appData.courtCount = data.courtCount;
+        
+        // 合并比分
+        data.matches.forEach(m => {
+            if (localScores[m.id]) {
+                m.scoreA = localScores[m.id].scoreA;
+                m.scoreB = localScores[m.id].scoreB;
+                m.status = localScores[m.id].status;
+            }
+        });
+        
+        appData.matches = data.matches;
+        calculatePlayerStats();
+        renderMatches();
+        updateEventName();
+        saveData();
+        
+        alert('✅ 数据已刷新！');
+    })
+    .catch(err => {
+        console.error('刷新失败:', err);
+        alert('❌ 刷新失败，请检查网络连接');
+    });
 }
 
 function resetData() {
