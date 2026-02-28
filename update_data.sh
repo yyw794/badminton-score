@@ -14,7 +14,7 @@ echo ""
 echo "📋 生成对阵表..."
 uv run python 排阵/lineup_scheduler.py
 
-# 2. 导出 Web 数据
+# 2. 导出 Web 数据 + 保存到数据库
 echo "🌐 导出 Web 数据..."
 uv run python docs/export_to_web.py
 
@@ -27,3 +27,6 @@ git push
 echo ""
 echo "✅ 完成！数据已更新并推送到 GitHub Pages"
 echo "   访问：https://yyw794.github.io/badminton-score/"
+echo ""
+echo "📊 查看历史统计:"
+echo "   uv run python db.py stats"

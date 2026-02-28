@@ -2,12 +2,18 @@
 """
 Excel 对阵表转 Web JSON 格式
 将 lineup_scheduler.py 生成的 Excel 文件转换为 Web 应用可用的 data.json 格式
+并同时保存到 SQLite 数据库
 """
 
 import openpyxl
 import json
 import os
 from datetime import datetime
+import sys
+
+# 导入数据库模块
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from db import init_db, save_event_data
 
 
 def parse_excel_to_json(excel_path: str, output_path: str, event_name: str = None):
@@ -97,6 +103,8 @@ def parse_excel_to_json(excel_path: str, output_path: str, event_name: str = Non
     print(f"  赛事名称：{event_name}")
     print(f"  场地数量：{court_count}")
     print(f"  球员数量：{len(player_stats)}")
+    
+    return output_data
 
 
 def main():
@@ -128,10 +136,17 @@ def main():
         print("  请先运行：python lineup_scheduler.py")
         return
     
-    parse_excel_to_json(excel_path, output_path, event_name)
+    output_data = parse_excel_to_json(excel_path, output_path, event_name)
+    
+    # 保存到数据库
+    print("\n💾 保存到数据库...")
+    init_db()
+    save_event_data(event_name, output_data["matches"], output_data["courtCount"])
+    
     print(f"\n使用方法:")
     print(f"  1. 打开 docs/index.html 即可使用 Web 记分功能")
     print(f"  2. 数据已自动更新到 docs/data.json")
+    print(f"  3. 历史数据已保存到 data.db")
 
 
 if __name__ == "__main__":
