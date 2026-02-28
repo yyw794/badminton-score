@@ -63,8 +63,7 @@ const DEFAULT_MATCHES = [
 
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
-    renderMatches();
-    updateEventName();
+    // renderMatches() 和 updateEventName() 在 loadData 的异步回调中调用
     switchCourt(1);  // 初始化时切换到 1 号场地，确保 tab 样式正确
 });
 
@@ -80,9 +79,34 @@ function loadData() {
             appData.matches = [...DEFAULT_MATCHES];
         }
     } else {
-        appData.matches = [...DEFAULT_MATCHES];
+        // 首次访问时，尝试从 data.json 加载
+        fetch('data.json')
+            .then(res => res.json())
+            .then(data => {
+                if (data.eventName) {
+                    appData.eventName = data.eventName;
+                }
+                if (data.matches && data.matches.length > 0) {
+                    appData.matches = data.matches;
+                } else {
+                    appData.matches = [...DEFAULT_MATCHES];
+                }
+                if (data.courtCount) {
+                    appData.courtCount = data.courtCount;
+                }
+                calculatePlayerStats();
+                renderMatches();
+                updateEventName();
+                saveData();
+            })
+            .catch(err => {
+                console.error('加载 data.json 失败:', err);
+                appData.matches = [...DEFAULT_MATCHES];
+                calculatePlayerStats();
+            });
+        return;  // 异步加载，直接返回
     }
-    
+
     // 计算球员统计
     calculatePlayerStats();
 }
