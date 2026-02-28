@@ -343,22 +343,51 @@ body {
     margin-bottom: 8px;
 }
 
-.score-inputs {
-    display: flex;
-    gap: 8px;
+.set-score {
+    margin-bottom: 20px;
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 10px;
 }
 
-.score-inputs input {
-    flex: 1;
-    padding: 12px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 16px;
+.set-title {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 12px;
     text-align: center;
     font-weight: 600;
 }
 
-.score-inputs input:focus {
+.set-inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.team-input {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.team-input label {
+    font-size: 13px;
+    color: #666;
+    text-align: center;
+}
+
+.team-input input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 18px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.team-input input:focus {
     outline: none;
     border-color: #667eea;
 }
@@ -368,33 +397,6 @@ body {
     color: #999;
     font-weight: 600;
     padding-top: 24px;
-}
-
-/* 快速比分 */
-.quick-scores {
-    margin-bottom: 16px;
-}
-
-.quick-title {
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 8px;
-}
-
-.quick-scores .quick-btn {
-    display: inline-block;
-    padding: 8px 12px;
-    margin: 4px;
-    background: #f0f0f0;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.quick-scores .quick-btn:hover {
-    background: #e0e0e0;
 }
 
 /* 按钮 */

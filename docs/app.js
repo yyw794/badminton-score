@@ -292,13 +292,6 @@ function closeModal() {
     currentMatchId = null;
 }
 
-function setQuickScore(a1, b1, a2, b2) {
-    document.getElementById('score-a1').value = a1;
-    document.getElementById('score-b1').value = b1;
-    document.getElementById('score-a2').value = a2;
-    document.getElementById('score-b2').value = b2;
-}
-
 function saveScore() {
     const match = appData.matches.find(m => m.id === currentMatchId);
     if (!match) return;

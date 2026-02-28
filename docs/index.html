@@ -63,31 +63,39 @@
                 </div>
                 <div class="modal-body">
                     <div class="match-info" id="modal-match-info"></div>
-                    
-                    <div class="score-input-section">
-                        <div class="team-score">
-                            <label>队伍 A</label>
-                            <div class="score-inputs">
-                                <input type="number" id="score-a1" placeholder="第 1 局" min="0" max="20">
-                                <input type="number" id="score-a2" placeholder="第 2 局" min="0" max="20">
-                            </div>
-                        </div>
-                        <div class="vs">VS</div>
-                        <div class="team-score">
-                            <label>队伍 B</label>
-                            <div class="score-inputs">
-                                <input type="number" id="score-b1" placeholder="第 1 局" min="0" max="20">
-                                <input type="number" id="score-b2" placeholder="第 2 局" min="0" max="20">
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="quick-scores">
-                        <p class="quick-title">快速选择：</p>
-                        <button class="quick-btn" onclick="setQuickScore(15,13,11,15)">15:13, 11:15</button>
-                        <button class="quick-btn" onclick="setQuickScore(15,8,15,10)">15:8, 15:10</button>
-                        <button class="quick-btn" onclick="setQuickScore(15,14,15,13)">15:14, 15:13</button>
-                        <button class="quick-btn" onclick="setQuickScore(15,10,12,15)">15:10, 12:15</button>
+                    <div class="score-input-section">
+                        <!-- 第 1 局 -->
+                        <div class="set-score">
+                            <h4 class="set-title">第 1 局</h4>
+                            <div class="set-inputs">
+                                <div class="team-input">
+                                    <label>队伍 A</label>
+                                    <input type="number" id="score-a1" placeholder="A 得分" min="0" max="20">
+                                </div>
+                                <span class="vs">VS</span>
+                                <div class="team-input">
+                                    <label>队伍 B</label>
+                                    <input type="number" id="score-b1" placeholder="B 得分" min="0" max="20">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 第 2 局 -->
+                        <div class="set-score">
+                            <h4 class="set-title">第 2 局</h4>
+                            <div class="set-inputs">
+                                <div class="team-input">
+                                    <label>队伍 A</label>
+                                    <input type="number" id="score-a2" placeholder="A 得分" min="0" max="20">
+                                </div>
+                                <span class="vs">VS</span>
+                                <div class="team-input">
+                                    <label>队伍 B</label>
+                                    <input type="number" id="score-b2" placeholder="B 得分" min="0" max="20">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <button class="save-btn" onclick="saveScore()">💾 保存比分</button>
