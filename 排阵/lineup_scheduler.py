@@ -73,10 +73,13 @@ def get_court_count(total_players: int) -> int:
 def generate_mixed_doubles_matches(males: List[str], females: List[str]) -> List[Tuple[Tuple[str, str], Tuple[str, str]]]:
     """Generate mixed doubles matches."""
     mixed_males = [m for m in males if m in MIXED_DOUBLES_MALES]
-    
-    # 过滤只打女双的球员
-    mixed_females = [f for f in females if not PLAYER_CONSTRAINTS.get(f, {}).get("only_womens_doubles")]
-    
+
+    # 过滤只打女双的球员（但如果女双人数不足 4 人，则允许她们参加混双）
+    can_play_womens_doubles = len(females) >= 4
+    mixed_females = [f for f in females 
+                     if not PLAYER_CONSTRAINTS.get(f, {}).get("only_womens_doubles") 
+                     or not can_play_womens_doubles]
+
     matches = []
 
     for male_pair in itertools.combinations(mixed_males, 2):
@@ -143,16 +146,27 @@ def select_balanced_matches(
         return PLAYER_CONSTRAINTS.get(player, {})
 
     def can_player_play(player, current_round_matches, round_num, total_rounds):
+        """
+        检查球员是否可以在当前轮次上场比赛。
+        
+        【最高优先级规则】每个轮次中，每个球员在所有场地（1 号、2 号、3 号）只能出现一次！
+        这是排阵的核心原则，必须严格保证。
+        """
         constraint = get_constraint(player)
         fixed_games = constraint.get("fixed_games")
 
+        # 检查是否已达到固定场次要求
         if fixed_games is not None and player_games[player] >= fixed_games:
             return False
+        # 检查是否已达到最大场次限制
         if MAX_GAMES_PER_PLAYER is not None and player_games[player] >= MAX_GAMES_PER_PLAYER:
             return False
+        
+        # 【核心规则】检查球员是否已在当前轮次的其他场地出现过
         for m in current_round_matches:
             if player in get_match_players(m["match"]):
-                return False
+                return False  # 该球员已在本轮次上场比赛，不能再参加
+        
         return True
 
     def can_add_match(match, current_round_matches, round_num, total_rounds):
@@ -161,16 +175,19 @@ def select_balanced_matches(
             if m.get("type"):
                 match_type = m["type"]
                 break
-        
+
+        # 获取当前女性球员总数，判断女双是否可行
+        all_females_count = len([p for p in players if p in FEMALE_PLAYERS])
+        can_play_womens_doubles = all_females_count >= 4
+
         for player in get_match_players(match):
-            # 检查特殊约束：只打女双的球员不能参加混双
+            # 检查特殊约束：只打女双的球员不能参加混双（但女双人数不足 4 人时例外）
             constraint = get_constraint(player)
             if constraint.get("only_womens_doubles"):
-                # 如果当前比赛不是女双，该球员不能参加
-                if match_type and match_type != "女双":
-                    # 检查当前轮次是否有女双比赛可以安排
-                    pass  # 在 try_add_match 中处理
-            
+                # 如果当前比赛不是女双，且女双人数足够 4 人，该球员不能参加
+                if match_type and match_type != "女双" and can_play_womens_doubles:
+                    return False
+
             if not can_player_play(player, current_round_matches, round_num, total_rounds):
                 return False
         return True
@@ -246,8 +263,19 @@ def select_balanced_matches(
     current_round = []
     total_rounds = (total_matches + court_count - 1) // court_count
 
-    def try_add_match(pool, match_type_name, current_count, target_count):
-        """尝试添加一场比赛到当前轮次，返回是否成功。"""
+    # 比赛类型名称映射
+    match_type_name_map = {"mixed": "混双", "mens": "男双", "womens": "女双"}
+
+    def try_add_match(pool, match_type_name, current_count, target_count, allow_fallback=False):
+        """尝试添加一场比赛到当前轮次，返回是否成功。
+        
+        Args:
+            pool: 比赛池
+            match_type_name: 比赛类型 (mixed/mens/womens)
+            current_count: 当前已使用该类型的次数
+            target_count: 目标使用次数
+            allow_fallback: 是否允许 fallback（混双/女双位置用男双代替）
+        """
         nonlocal current_round, mixed_used, mens_used, womens_used
 
         # 如果已达到目标数量，跳过（除非其他类型都无法添加）
@@ -258,29 +286,54 @@ def select_balanced_matches(
         best_match = None
         best_score = float('inf')
 
-        for match in pool:
-            # 检查是否有球员不能参加该类型的比赛
-            can_play = True
-            for player in get_match_players(match):
-                constraint = get_constraint(player)
-                if constraint.get("only_womens_doubles") and match_type_name != "womens":
-                    can_play = False
-                    break
-            
-            if not can_play:
-                continue
-                
-            if not can_add_match(match, current_round, current_round_num, total_rounds):
-                continue
-            score = get_match_score(match, current_round_num)
-            if score < best_score:
-                best_score = score
-                best_match = match
+        # 获取当前女性球员总数，判断女双是否可行
+        all_females_count = len([p for p in players if p in FEMALE_PLAYERS])
+        can_play_womens_doubles = all_females_count >= 4
+
+        # Fallback 逻辑：如果允许 fallback 且原池子为空或无法提供比赛，从男双池借
+        if allow_fallback and (not pool or (match_type_name == "mixed" and len(females) < 2)):
+            # 从男双池借一场比赛来打这个位置
+            if mens_pool:
+                for match in mens_pool:
+                    if can_add_match(match, current_round, current_round_num, total_rounds):
+                        score = get_match_score(match, current_round_num)
+                        if score < best_score:
+                            best_score = score
+                            best_match = match
+        
+        # 如果没有找到 fallback 比赛，尝试原池子
+        if not best_match and pool:
+            for match in pool:
+                # 检查是否有球员不能参加该类型的比赛
+                can_play = True
+                for player in get_match_players(match):
+                    constraint = get_constraint(player)
+                    if constraint.get("only_womens_doubles") and match_type_name != "womens" and can_play_womens_doubles:
+                        can_play = False
+                        break
+
+                if not can_play:
+                    continue
+
+                if not can_add_match(match, current_round, current_round_num, total_rounds):
+                    continue
+                score = get_match_score(match, current_round_num)
+                if score < best_score:
+                    best_score = score
+                    best_match = match
 
         if best_match:
+            # 确定实际显示的类型
+            is_fallback = best_match in mens_pool and match_type_name != "mens"
+            if is_fallback:
+                display_type = f"{match_type_name_map[match_type_name]} (男代)"
+            else:
+                display_type = match_type_name_map[match_type_name]
+            
             current_round.append({
-                "type": {"mixed": "混双", "mens": "男双", "womens": "女双"}[match_type_name],
-                "match": best_match
+                "type": display_type,
+                "match": best_match,
+                "fallback": is_fallback
             })
             for player in get_match_players(best_match):
                 player_games[player] += 1
@@ -289,9 +342,14 @@ def select_balanced_matches(
                 pair_key = get_pair_key(pair[0], pair[1])
                 if pair_key in partner_games:
                     partner_games[pair_key] += 1
-            pool.remove(best_match)
-
-            # 更新计数
+            
+            # 从对应的池子移除
+            if best_match in pool:
+                pool.remove(best_match)
+            elif best_match in mens_pool:
+                mens_pool.remove(best_match)
+            
+            # 更新计数（fallback 也算作原类型的计数）
             if match_type_name == "mixed":
                 mixed_used += 1
             elif match_type_name == "mens":
@@ -312,11 +370,11 @@ def select_balanced_matches(
     
     for round_num in range(total_rounds):
         current_round = []
-        
+
         # 尝试填满当前轮次的所有场地
         for court_slot in range(court_count):
             added = False
-            
+
             # 按优先级尝试每种比赛类型
             for match_type, get_used, get_target, pool in type_priorities:
                 if not pool:
@@ -332,13 +390,13 @@ def select_balanced_matches(
                     else:
                         mens_used = new_count
                     break
-            
-            # 如果优先级类型都无法添加，尝试所有类型
+
+            # 如果优先级类型都无法添加，尝试所有类型（放宽限制）
             if not added:
                 for match_type, get_used, get_target, pool in type_priorities:
                     if not pool:
                         continue
-                    # 放宽限制
+                    # 放宽限制：不检查目标数量
                     success, new_count = try_add_match(pool, match_type, 0, 999)
                     if success:
                         added = True
@@ -349,33 +407,112 @@ def select_balanced_matches(
                         else:
                             mens_used = new_count
                         break
-            
+
+            # 如果还是无法添加，尝试 fallback 模式（用男双填充场地）
+            if not added:
+                # 尝试用男双代替混双：从男双池找一场可用的比赛
+                if mens_pool:
+                    for match in list(mens_pool):
+                        if can_add_match(match, current_round, len(rounds) + 1, total_rounds):
+                            current_round.append({
+                                "type": "混双 (男代)",
+                                "match": match,
+                                "fallback": True
+                            })
+                            for player in get_match_players(match):
+                                player_games[player] += 1
+                            pair_a, pair_b = match
+                            for pair in [pair_a, pair_b]:
+                                pair_key = get_pair_key(pair[0], pair[1])
+                                if pair_key in partner_games:
+                                    partner_games[pair_key] += 1
+                            mens_pool.remove(match)
+                            mens_used += 1
+                            added = True
+                            break
+
+            # 如果还是无法添加，尝试临时组合：从本轮未上场的人中选 4 个打第 3 场地
+            if not added:
+                # 找出本轮已上场的球员
+                played_players = set()
+                for m in current_round:
+                    played_players.update(get_match_players(m["match"]))
+                
+                # 候选人 = 所有球员 - 已上场球员 - 不能打的球员（fixed_games 已满）
+                candidates = []
+                for p in players:
+                    if p in played_players:
+                        continue
+                    constraint = PLAYER_CONSTRAINTS.get(p, {})
+                    fixed_games = constraint.get("fixed_games")
+                    if fixed_games is not None and player_games[p] >= fixed_games:
+                        continue
+                    if MAX_GAMES_PER_PLAYER is not None and player_games[p] >= MAX_GAMES_PER_PLAYER:
+                        continue
+                    candidates.append(p)
+                
+                # 如果有至少 4 个候选人，随机选 4 个组成一场比赛
+                if len(candidates) >= 4:
+                    selected = random.sample(candidates, 4)
+                    # 尽量按性别配对
+                    females_in_selected = [p for p in selected if p in FEMALE_PLAYERS]
+                    males_in_selected = [p for p in selected if p not in FEMALE_PLAYERS]
+                    
+                    if len(females_in_selected) >= 2 and len(males_in_selected) >= 2:
+                        # 2 女 2 男：女双
+                        pair1 = (females_in_selected[0], females_in_selected[1])
+                        pair2 = (males_in_selected[0], males_in_selected[1])
+                        match_type = "女双 (乱打)"
+                    elif len(males_in_selected) >= 4:
+                        # 4 男：男双
+                        pair1 = (males_in_selected[0], males_in_selected[1])
+                        pair2 = (males_in_selected[2], males_in_selected[3])
+                        match_type = "男双 (乱打)"
+                    elif len(males_in_selected) >= 3:
+                        # 3 男 1 女：男双（2 男 vs 1 男 + 女打男双位置）
+                        pair1 = (males_in_selected[0], males_in_selected[1])
+                        pair2 = (males_in_selected[2], females_in_selected[0])
+                        match_type = "男双 (乱打)"
+                    elif len(males_in_selected) == 2 and len(females_in_selected) == 2:
+                        # 2 男 2 女：女双或混双
+                        pair1 = (females_in_selected[0], females_in_selected[1])
+                        pair2 = (males_in_selected[0], males_in_selected[1])
+                        match_type = "女双 (乱打)"
+                    else:
+                        # 默认：按 selected 顺序配对
+                        pair1 = (selected[0], selected[1])
+                        pair2 = (selected[2], selected[3])
+                        match_type = "男双 (乱打)"
+                    
+                    match = (pair1, pair2)
+                    current_round.append({
+                        "type": match_type,
+                        "match": match,
+                        "fallback": True
+                    })
+                    for player in get_match_players(match):
+                        player_games[player] += 1
+                    added = True
+
             if not added:
                 break
-        
+
         if current_round:
             rounds.append(current_round)
 
-    all_matches = []
-    for round_matches in rounds:
-        for match_info in round_matches:
-            all_matches.append(match_info)
-
-    final_rounds = []
-    match_idx = 0
-    while match_idx < len(all_matches):
-        round_matches = []
-        for court_idx in range(court_count):
-            if match_idx < len(all_matches):
-                all_matches[match_idx]["court"] = court_idx + 1
-                round_matches.append(all_matches[match_idx])
-                match_idx += 1
-        if round_matches:
-            final_rounds.append(round_matches)
-
-    rounds = final_rounds
+    # 直接使用已构建的轮次结构
+    # 为每个比赛添加轮次和场地信息
     selected = []
     for round_idx, round_matches in enumerate(rounds):
+        # 【核心规则检查】每个轮次中，每个球员只能出现一次
+        round_players = set()
+        for match_info in round_matches:
+            players_in_match = get_match_players(match_info["match"])
+            for p in players_in_match:
+                if p in round_players:
+                    raise ValueError(f"【核心规则违规】第{round_idx + 1}轮：球员 {p} 在同一轮次重复出现！")
+                round_players.add(p)
+        
         for court_idx, match_info in enumerate(round_matches):
             match_info["court"] = court_idx + 1
             match_info["round"] = round_idx + 1
@@ -420,10 +557,9 @@ def create_lineup_excel(matches: List[Dict], court_count: int, output_path: str,
         match_type = match_info["type"]
         match = match_info["match"]
         court = match_info["court"]
-        round_num = match_info.get("round", 1)
-        display_round = (row_idx - 4) // court_count + 1
+        round_num = match_info.get("round", 1)  # 直接使用已存储的轮次值
 
-        ws.cell(row=row_idx, column=1, value=display_round).font = font_content
+        ws.cell(row=row_idx, column=1, value=round_num).font = font_content
         ws.cell(row=row_idx, column=2, value=f"{court}号").font = font_content
         ws.cell(row=row_idx, column=3, value=match_type).font = font_content
         ws.cell(row=row_idx, column=4, value="/".join(match[0])).font = font_content
@@ -549,29 +685,55 @@ def main():
 
     from collections import Counter
     match_type_counts = Counter()
-    court_counts = Counter()
     for m in selected_matches:
         match_type_counts[m["type"]] += 1
-        court_counts[m["court"]] += 1
 
     print(f"\n比赛类型分布:")
     for t, c in sorted(match_type_counts.items()):
         print(f"  - {t}: {c}场")
 
-    print(f"\n场地分布:")
-    for court, c in sorted(court_counts.items()):
-        print(f"  - {court}号场地：{c}场")
+    # 【轮次详情】输出每个轮次每个场地的球员，人工确认无重复
+    print(f"\n【轮次详情】")
+    rounds_dict = {}
+    for m in selected_matches:
+        round_num = m.get("round", 1)
+        if round_num not in rounds_dict:
+            rounds_dict[round_num] = []
+        rounds_dict[round_num].append(m)
+    
+    for round_num in sorted(rounds_dict.keys()):
+        round_matches = rounds_dict[round_num]
+        court_count_round = len(round_matches)  # 本轮实际使用的场地数
+        print(f"\n第{round_num}轮 ({court_count_round}个场地):")
+        round_players = set()
+        for m in round_matches:
+            court = m["court"]
+            match_type = m["type"]
+            team_a = "/".join(m["match"][0])
+            team_b = "/".join(m["match"][1])
+            players_in_match = set(get_match_players(m["match"]))
+            print(f"  {court}号场地 [{match_type}]: {team_a} VS {team_b}")
+            round_players.update(players_in_match)
+        print(f"  本轮球员 ({len(round_players)}人): {', '.join(sorted(round_players))}")
+        # 计算轮空球员
+        round_bye_players = [p for p in all_players if p not in round_players]
+        if round_bye_players:
+            print(f"  本轮轮空 ({len(round_bye_players)}人): {', '.join(sorted(round_bye_players))}")
+    
+    print("\n✓ 核心规则检查通过：无球员在同一轮次重复出现")
 
     print(f"\n球员参赛场次统计:")
     player_games = {}
     player_type_games = {}
     for m in selected_matches:
         match_type = m["type"]
+        # 处理 fallback 类型：提取基础类型（男双/女双/混双）
+        base_type = match_type.split(" ")[0]  # "男双 (临时)" -> "男双", "混双 (男代)" -> "混双"
         for player in get_match_players(m["match"]):
             player_games[player] = player_games.get(player, 0) + 1
             if player not in player_type_games:
                 player_type_games[player] = {"男双": 0, "女双": 0, "混双": 0}
-            player_type_games[player][match_type] += 1
+            player_type_games[player][base_type] += 1
 
     for player in sorted(all_players):
         games = player_games.get(player, 0)

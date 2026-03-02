@@ -3,6 +3,14 @@
  * 羽毛球比赛记分系统 - 前端逻辑
  */
 
+// ==================== API 配置 ====================
+// 阿里云函数计算 API 地址
+const API_BASE_URL = 'https://badminton-api-mafqsjtcjp.cn-hangzhou.fcapp.run';
+const EVENT_ID = 'default';  // TODO: 创建后替换为实际活动 ID
+
+// 是否启用云端同步（改为 true 启用）
+const ENABLE_CLOUD_SYNC = false;  // 先保持 false，等导入数据后再改为 true
+
 // ==================== 数据结构 ====================
 
 /**
@@ -31,6 +39,7 @@ let appData = {
 
 let currentCourt = 1;
 let currentMatchId = null;
+let syncTimer = null;  // 定时同步定时器
 
 // ==================== 默认对阵数据（示例） ====================
 
@@ -70,6 +79,47 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==================== 数据持久化 ====================
 
 function loadData() {
+    if (ENABLE_CLOUD_SYNC) {
+        // 从云端加载数据
+        loadFromCloud();
+    } else {
+        // 从本地加载数据
+        loadFromLocal();
+    }
+}
+
+function loadFromCloud() {
+    // 从云端 API 加载数据
+    fetch(`${API_BASE_URL}/events/${EVENT_ID}`)
+        .then(res => {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.json();
+        })
+        .then(response => {
+            if (response.success && response.data) {
+                const data = response.data;
+                appData.eventName = data.name;
+                appData.courtCount = data.court_count || 3;
+                appData.matches = data.matches || [];
+                calculatePlayerStats();
+                renderMatches();
+                updateEventName();
+                saveData();  // 同时保存到本地缓存
+                
+                // 启动定时同步（每 5 秒）
+                startSyncTimer();
+            } else {
+                console.error('云端数据加载失败:', response);
+                loadFromLocal();  // 降级到本地
+            }
+        })
+        .catch(err => {
+            console.error('云端加载失败，使用本地数据:', err);
+            loadFromLocal();  // 降级到本地
+        });
+}
+
+function loadFromLocal() {
     const saved = localStorage.getItem('badminton_match_data');
     if (saved) {
         try {
@@ -80,7 +130,6 @@ function loadData() {
         }
     } else {
         // 首次访问时，从 data.json 加载（禁用缓存）
-        // 添加时间戳参数，绕过浏览器缓存
         fetch('data.json?t=' + Date.now(), {
             cache: 'no-cache',
             headers: {
@@ -122,12 +171,49 @@ function saveData() {
     localStorage.setItem('badminton_match_data', JSON.stringify(appData));
 }
 
+// 保存到云端
+function saveToCloud() {
+    if (!ENABLE_CLOUD_SYNC) return;
+    
+    // 只保存比分数据，不覆盖活动信息
+    const updatePromises = appData.matches.map(match => {
+        return fetch(`${API_BASE_URL}/matches/${match.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                scoreA: match.scoreA,
+                scoreB: match.scoreB,
+                status: match.status
+            })
+        });
+    });
+    
+    Promise.all(updatePromises)
+        .then(() => console.log('云端同步成功'))
+        .catch(err => console.error('云端同步失败:', err));
+}
+
+// 启动定时同步
+function startSyncTimer() {
+    if (syncTimer) clearInterval(syncTimer);
+    syncTimer = setInterval(() => {
+        loadFromCloud();  // 每 5 秒从云端拉取最新数据
+    }, 5000);
+}
+
 // 从服务器刷新数据
 function refreshData() {
-    if (!confirm('🔄 从服务器刷新数据？\n\n这将重新加载最新的对阵数据，但您在本地录入的比分将保留。\n\n确定继续吗？')) {
+    if (ENABLE_CLOUD_SYNC) {
+        // 从云端刷新
+        loadFromCloud();
+        alert('🔄 已从云端刷新数据！');
         return;
     }
     
+    if (!confirm('🔄 从服务器刷新数据？\n\n这将重新加载最新的对阵数据，但您在本地录入的比分将保留。\n\n确定继续吗？')) {
+        return;
+    }
+
     fetch('data.json?t=' + Date.now(), {
         cache: 'no-cache',
         headers: {
@@ -356,15 +442,15 @@ function closeModal() {
 function saveScore() {
     const match = appData.matches.find(m => m.id === currentMatchId);
     if (!match) return;
-    
+
     const a1 = parseInt(document.getElementById('score-a1').value) || 0;
     const a2 = parseInt(document.getElementById('score-a2').value) || 0;
     const b1 = parseInt(document.getElementById('score-b1').value) || 0;
     const b2 = parseInt(document.getElementById('score-b2').value) || 0;
-    
+
     match.scoreA = [a1, a2];
     match.scoreB = [b1, b2];
-    
+
     // 判断比赛状态
     if (a1 === 0 && a2 === 0 && b1 === 0 && b2 === 0) {
         match.status = 'pending';
@@ -373,11 +459,36 @@ function saveScore() {
     } else {
         match.status = 'finished';
     }
-    
-    saveData();
+
+    saveData();  // 保存到本地
+    saveToCloudSingle(match);  // 保存到云端
     renderMatches();
     calculatePlayerStats();
     closeModal();
+}
+
+// 保存单场比赛到云端
+function saveToCloudSingle(match) {
+    if (!ENABLE_CLOUD_SYNC) return;
+    
+    fetch(`${API_BASE_URL}/matches/${match.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            scoreA: match.scoreA,
+            scoreB: match.scoreB,
+            status: match.status
+        })
+    })
+    .then(res => res.json())
+    .then(response => {
+        if (response.success) {
+            console.log(`比赛 ${match.id} 比分已同步到云端`);
+        } else {
+            console.error(`比赛 ${match.id} 同步失败:`, response);
+        }
+    })
+    .catch(err => console.error(`比赛 ${match.id} 同步错误:`, err));
 }
 
 function clearScore() {

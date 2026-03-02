@@ -1,0 +1,6 @@
+HOST:gateway01.ap-southeast-1.prod.aws.tidbcloud.com
+PORT:4000
+USERNAME:8AXKPCJGEHG5Qqv.root
+PASSWORD:7iv93aerRyGckxqw
+DATABASE:test
+CA:/etc/ssl/cert.pem

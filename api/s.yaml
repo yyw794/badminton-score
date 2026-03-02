@@ -1,0 +1,14 @@
+edition: '3.0.0'
+name: badminton-score-api
+description: '羽毛球比赛计分 API'
+runtime: python3.10
+handler: index.handler
+
+codeDir: .
+layers:
+  - repo: pip
+    name: mysql-connector-python
+
+custom:
+  customRuntimeConfig:
+    port: 8080

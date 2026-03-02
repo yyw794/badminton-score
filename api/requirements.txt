@@ -1,0 +1,4 @@
+# 阿里云函数计算 - Python 依赖
+flask>=2.0.0
+mysql-connector-python>=8.0.0
+gunicorn>=20.0.0
