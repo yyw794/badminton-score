@@ -16,6 +16,6 @@
     "TIDB_PORT": "4000",
     "TIDB_USER": "8AXKPCJGEHG5Qqv.root",
     "TIDB_PASSWORD": "7iv93aerRyGckxqw",
-    "TIDB_DATABASE": "badminton"
+    "TIDB_DATABASE": "test"
   }
 }
