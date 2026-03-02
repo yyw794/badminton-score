@@ -715,8 +715,8 @@ def main():
             print(f"  {court}号场地 [{match_type}]: {team_a} VS {team_b}")
             round_players.update(players_in_match)
         print(f"  本轮球员 ({len(round_players)}人): {', '.join(sorted(round_players))}")
-        # 计算轮空球员
-        round_bye_players = [p for p in all_players if p not in round_players]
+        # 计算轮空球员（排除提前走的人）
+        round_bye_players = [p for p in all_players if p not in round_players and not PLAYER_CONSTRAINTS.get(p, {}).get("early_departure")]
         if round_bye_players:
             print(f"  本轮轮空 ({len(round_bye_players)}人): {', '.join(sorted(round_bye_players))}")
     
