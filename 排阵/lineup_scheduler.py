@@ -4,6 +4,7 @@ Badminton Lineup Scheduler
 Generates balanced matchups for mixed doubles, men's doubles, and women's doubles.
 Single sheet output optimized for A4 printing.
 Supports player-specific constraints (fixed games, early departure) and fixed partners.
+Supports guest players (former employees) with lower priority than internal employees.
 """
 
 import openpyxl
@@ -14,22 +15,34 @@ import random
 
 
 # Player definitions
-MALE_PLAYERS = [
+INTERNAL_MALE_PLAYERS = [
     "苏大哲", "罗蒙", "江锐", "严勇文", "陈顺星", "陈小洪",
-    "卢志辉", "林锋", "王小波", "刘继宇", "董广博", "林琪琛", "罗琴荩", "张欣欣", "程建兴"
+    "卢志辉", "林锋", "王小波", "刘继宇", "董广博", "林琪琛", "罗琴荩"
 ]
 
-FEMALE_PLAYERS = [
+GUEST_MALE_PLAYERS = [
+    "张欣欣", "黄冬青", "程建兴", "陈宇霆", "卢子龙", "吴煜"
+]
+
+MALE_PLAYERS = INTERNAL_MALE_PLAYERS + GUEST_MALE_PLAYERS
+
+INTERNAL_FEMALE_PLAYERS = [
     "田茜", "唐英武", "李祺祺", "高洁", "滕菲", "谢卓珊", "崔倩男", "林小连"
 ]
 
-# Mixed doubles eligible male players
+GUEST_FEMALE_PLAYERS = [
+    "张燕红", "李杏芝", "项小英"
+]
+
+FEMALE_PLAYERS = INTERNAL_FEMALE_PLAYERS + GUEST_FEMALE_PLAYERS
+
+# Mixed doubles eligible male players (internal only)
 MIXED_DOUBLES_MALES = {"林锋", "王小波", "陈顺星", "罗琴荩"}
 
 # Player-specific constraints
 PLAYER_CONSTRAINTS = {
-    "严勇文": {"fixed_games": 3, "early_departure": True},
-    "崔倩男": {"fixed_games": 4, "early_departure": True},
+    "严勇文": {"fixed_games": 5, "early_departure": True},
+    "崔倩男": {"fixed_games": 5, "early_departure": True},
     "林小连": {"only_womens_doubles": True},  # 只打女双
 }
 
@@ -39,8 +52,26 @@ FIXED_PARTNERS = {
 }
 
 # Global config
-MATCHES_PER_COURT = 6
-MAX_GAMES_PER_PLAYER = 6  # 提高到 6，让球员更容易达到 5 场
+MATCHES_PER_COURT = 8
+MAX_GAMES_INTERNAL = 6  # Internal employees max games
+MAX_GAMES_GUEST = 5     # Guest players max games (lower priority)
+
+
+def is_internal_player(player: str) -> bool:
+    """Check if a player is an internal employee."""
+    return player in INTERNAL_MALE_PLAYERS or player in INTERNAL_FEMALE_PLAYERS
+
+
+def is_guest_player(player: str) -> bool:
+    """Check if a player is a guest player (former employee)."""
+    return player in GUEST_MALE_PLAYERS or player in GUEST_FEMALE_PLAYERS
+
+
+def get_max_games_for_player(player: str) -> int:
+    """Get the maximum games allowed for a player based on their status."""
+    if is_guest_player(player):
+        return MAX_GAMES_GUEST
+    return MAX_GAMES_INTERNAL
 
 
 def parse_signup(signup_text: str) -> Tuple[List[str], List[str]]:
@@ -148,9 +179,12 @@ def select_balanced_matches(
     def can_player_play(player, current_round_matches, round_num, total_rounds):
         """
         检查球员是否可以在当前轮次上场比赛。
-        
+
         【最高优先级规则】每个轮次中，每个球员在所有场地（1 号、2 号、3 号）只能出现一次！
         这是排阵的核心原则，必须严格保证。
+        
+        【外援球员规则】外援球员最大场次限制为 5 场，内部员工为 6 场，
+        优先保障内部员工的场次。
         """
         constraint = get_constraint(player)
         fixed_games = constraint.get("fixed_games")
@@ -158,15 +192,16 @@ def select_balanced_matches(
         # 检查是否已达到固定场次要求
         if fixed_games is not None and player_games[player] >= fixed_games:
             return False
-        # 检查是否已达到最大场次限制
-        if MAX_GAMES_PER_PLAYER is not None and player_games[player] >= MAX_GAMES_PER_PLAYER:
+        # 检查是否已达到最大场次限制（外援 5 场，内部 6 场）
+        max_games = get_max_games_for_player(player)
+        if player_games[player] >= max_games:
             return False
-        
+
         # 【核心规则】检查球员是否已在当前轮次的其他场地出现过
         for m in current_round_matches:
             if player in get_match_players(m["match"]):
                 return False  # 该球员已在本轮次上场比赛，不能再参加
-        
+
         return True
 
     def can_add_match(match, current_round_matches, round_num, total_rounds):
@@ -194,12 +229,12 @@ def select_balanced_matches(
 
     def get_match_score(match, round_num):
         """评分越低越优先被选中。
-        
+
         评分规则：
         1. 有固定场次要求的球员：未完成时大幅减分（最优先）
-        2. 未达到 5 场的球员：减分（优先）
-        3. 达到 5 场的球员：小幅加分（靠后）
-        4. 达到 6 场的球员：大幅加分（最后）
+        2. 未达到目标场次的球员：减分（优先）
+        3. 外援球员：小幅加分（降低优先级，优先保障内部员工）
+        4. 达到最大场次的球员：大幅加分（最后）
         5. 固定搭档组合：减分（优先）
         """
         match_players = get_match_players(match)
@@ -208,29 +243,34 @@ def select_balanced_matches(
         avg_games = sum(active_games) / len(active_games) if active_games else 0
 
         TARGET_GAMES = 5  # 目标场次
-        
+
         for player in match_players:
             constraint = get_constraint(player)
             games = player_games[player]
             fixed_games = constraint.get("fixed_games")
+            max_games = get_max_games_for_player(player)
             score = 0
-            
+
             # 固定场次要求：未完成时大幅减分（最优先）
             if fixed_games is not None:
                 remaining = fixed_games - games
                 if remaining > 0:
                     score -= remaining * 1000
-            
+
             # 未达到目标场次的球员优先
             if games < TARGET_GAMES:
                 score -= (TARGET_GAMES - games) * 200
-            elif games >= MAX_GAMES_PER_PLAYER:
+            elif games >= max_games:
                 # 达到最大场次，大幅加分（靠后）
                 score += 2000
             else:
-                # 达到 5 场但未到 6 场，小幅加分
+                # 达到 5 场但未到最大场次，小幅加分
                 score += (games - TARGET_GAMES) * 100
-            
+
+            # 外援球员：小幅加分（降低优先级，优先保障内部员工）
+            if is_guest_player(player):
+                score += 50
+
             scores.append(score)
 
         pair_a, pair_b = match
@@ -251,10 +291,13 @@ def select_balanced_matches(
     random.shuffle(womens_pool)
 
     # 预设比赛类型比例和目标数量
-    mixed_target = total_matches // 2  # 混双约 50%
-    mens_target = total_matches // 3   # 男双约 33%
-    womens_target = total_matches - mixed_target - mens_target  # 女双剩余
-    
+    # 混双目标：约 30-35%（混双资格男性只有 4 人，女性 5 人，最多约 8-10 场）
+    # 女双目标：约 25%（女性 5 人，最多约 6-7 场）
+    # 男双剩余：约 40-45%
+    mixed_target = int(total_matches * 0.33)  # 混双约 33% (8 场)
+    womens_target = int(total_matches * 0.25)  # 女双约 25% (6 场)
+    mens_target = total_matches - mixed_target - womens_target  # 男双剩余 (约 42%)
+
     mixed_used = 0
     mens_used = 0
     womens_used = 0
@@ -361,15 +404,31 @@ def select_balanced_matches(
         return False, current_count
 
     # 多轮填充：每轮尝试填满所有场地
-    # 优先级：女双 > 混双 > 男双（确保女性球员先安排女双）
-    type_priorities = [
-        ("womens", lambda: womens_used, lambda: womens_target + 2, womens_pool),  # 女双最优先
-        ("mixed", lambda: mixed_used, lambda: mixed_target, mixed_pool),
-        ("mens", lambda: mens_used, lambda: mens_target, mens_pool),
+    # 策略：交替安排女双和混双，确保两种类型都有足够比例
+    # 第 1、4、7...轮优先女双，第 2、5、8...轮优先混双，第 3、6、9...轮优先男双
+    type_priorities_default = [
+        ("womens", lambda: womens_used, lambda: womens_target + 1, womens_pool),  # 女双
+        ("mixed", lambda: mixed_used, lambda: mixed_target + 1, mixed_pool),  # 混双
+        ("mens", lambda: mens_used, lambda: mens_target + 2, mens_pool),  # 男双
+    ]
+    
+    # 混双优先的轮次（确保混双比例）
+    type_priorities_mixed_first = [
+        ("mixed", lambda: mixed_used, lambda: mixed_target + 2, mixed_pool),  # 混双最优先（放宽限制）
+        ("womens", lambda: womens_used, lambda: womens_target + 1, womens_pool),  # 女双次优先
+        ("mens", lambda: mens_used, lambda: mens_target + 2, mens_pool),  # 男双最后
     ]
     
     for round_num in range(total_rounds):
         current_round = []
+
+        # 交替优先级：第 1、4、7 轮女双优先，第 2、5、8 轮混双优先，第 3、6、9 轮默认
+        if round_num % 3 == 0:
+            type_priorities = type_priorities_default  # 女双优先
+        elif round_num % 3 == 1:
+            type_priorities = type_priorities_mixed_first  # 混双优先
+        else:
+            type_priorities = type_priorities_default  # 默认
 
         # 尝试填满当前轮次的所有场地
         for court_slot in range(court_count):
@@ -447,7 +506,8 @@ def select_balanced_matches(
                     fixed_games = constraint.get("fixed_games")
                     if fixed_games is not None and player_games[p] >= fixed_games:
                         continue
-                    if MAX_GAMES_PER_PLAYER is not None and player_games[p] >= MAX_GAMES_PER_PLAYER:
+                    max_games = get_max_games_for_player(p)
+                    if player_games[p] >= max_games:
                         continue
                     candidates.append(p)
                 
@@ -674,7 +734,8 @@ def main():
     print(f"\n配置参数:")
     print(f"  - 每场地比赛数：{MATCHES_PER_COURT}场")
     print(f"  - 总比赛数：{MATCHES_PER_COURT * court_count}场")
-    print(f"  - 球员最大场次：{MAX_GAMES_PER_PLAYER if MAX_GAMES_PER_PLAYER else '不限制'}")
+    print(f"  - 内部员工最大场次：{MAX_GAMES_INTERNAL}场")
+    print(f"  - 外援球员最大场次：{MAX_GAMES_GUEST}场（优先保障内部员工）")
 
     matches_per_court = MATCHES_PER_COURT
     total_matches = matches_per_court * court_count
