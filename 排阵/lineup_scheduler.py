@@ -12,6 +12,7 @@ from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 import itertools
 from typing import List, Tuple, Dict, Optional
 import random
+import re
 
 
 # Player definitions
@@ -36,14 +37,63 @@ GUEST_FEMALE_PLAYERS = [
 
 FEMALE_PLAYERS = INTERNAL_FEMALE_PLAYERS + GUEST_FEMALE_PLAYERS
 
+
+def parse_activity_date(signup_text: str) -> str:
+    """
+    Parse activity date from signup text.
+    
+    Supports formats:
+    - 20260323 羽毛球活动
+    - 2026-03-23 羽毛球活动
+    - 2026/03/23 羽毛球活动
+    - 3 月 23 日羽毛球活动
+    """
+    lines = signup_text.strip().split("\n")
+    
+    for line in lines[:5]:  # Check first 5 lines
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        
+        # Try YYYYMMDD format
+        match = re.search(r'(\d{4})(\d{2})(\d{2})', line)
+        if match:
+            year, month, day = match.groups()
+            return f"{year}年{month}月{day}日"
+        
+        # Try YYYY-MM-DD or YYYY/MM/DD format
+        match = re.search(r'(\d{4})[-/](\d{2})[-/](\d{2})', line)
+        if match:
+            year, month, day = match.groups()
+            return f"{year}年{month}月{day}日"
+        
+        # Try 月日 format (e.g., 3 月 23 日)
+        match = re.search(r'(\d{1,2})月 (\d{1,2}) 日', line)
+        if match:
+            month, day = match.groups()
+            return f"{month}月{day}日"
+    
+    return ""  # No date found
+
 # Mixed doubles eligible male players (internal only)
-MIXED_DOUBLES_MALES = {"林锋", "王小波", "陈顺星", "罗琴荩"}
+MIXED_DOUBLES_MALES = {"林锋", "王小波", "陈顺星", "罗琴荩", "罗蒙"}
 
 # Player-specific constraints
+# fixed_games: None = 自动根据场地紧张程度计算，整数 = 固定场次
 PLAYER_CONSTRAINTS = {
-    "严勇文": {"fixed_games": 5, "early_departure": True},
-    "崔倩男": {"fixed_games": 5, "early_departure": True},
+    "严勇文": {"fixed_games": None, "early_departure": True},
+    "崔倩男": {"fixed_games": None, "early_departure": True},
     "林小连": {"only_womens_doubles": True},  # 只打女双
+}
+
+# 场地紧张程度阈值（球员平均比赛场次）
+# 当球员平均比赛场次 >= 此值时，场地算充裕；否则算紧张
+COURT_ABUNDANCE_THRESHOLD = 5.0
+
+# 提前离场球员的场次配置
+EARLY_DEPARTURE_GAMES = {
+    "abundant": 5,  # 场地充裕时的场次
+    "tight": 4,     # 场地紧张时的场次
 }
 
 # Fixed partner pairs
@@ -53,8 +103,8 @@ FIXED_PARTNERS = {
 
 # Global config
 MATCHES_PER_COURT = 8
-MAX_GAMES_INTERNAL = 6  # Internal employees max games
-MAX_GAMES_GUEST = 5     # Guest players max games (lower priority)
+MAX_GAMES_INTERNAL = 7  # Internal employees max games
+MAX_GAMES_GUEST = 6     # Guest players max games (lower priority)
 
 
 def is_internal_player(player: str) -> bool:
@@ -72,6 +122,45 @@ def get_max_games_for_player(player: str) -> int:
     if is_guest_player(player):
         return MAX_GAMES_GUEST
     return MAX_GAMES_INTERNAL
+
+
+def get_fixed_games_for_player(player: str, total_matches: int, total_players: int) -> Optional[int]:
+    """
+    Get the fixed games for a player with early_departure constraint.
+
+    This dynamically adjusts based on court availability:
+    - Court abundance (avg_games >= threshold): higher games (e.g., 5)
+    - Court scarcity (avg_games < threshold): lower games (e.g., 4)
+
+    Args:
+        player: Player name
+        total_matches: Total number of matches planned
+        total_players: Total number of players
+
+    Returns:
+        Fixed games count, or None if no fixed_games constraint
+    """
+    constraint = PLAYER_CONSTRAINTS.get(player, {})
+    fixed_games = constraint.get("fixed_games")
+
+    # If explicitly set to an integer, use that value
+    if fixed_games is not None:
+        return fixed_games
+
+    # If set to None and player has early_departure, calculate dynamically
+    if constraint.get("early_departure"):
+        # Calculate average games per player
+        # Each match involves 4 player-games
+        total_player_games = total_matches * 4
+        avg_games_per_player = total_player_games / total_players if total_players > 0 else 0
+
+        # Determine court abundance
+        if avg_games_per_player >= COURT_ABUNDANCE_THRESHOLD:
+            return EARLY_DEPARTURE_GAMES["abundant"]
+        else:
+            return EARLY_DEPARTURE_GAMES["tight"]
+
+    return None
 
 
 def parse_signup(signup_text: str) -> Tuple[List[str], List[str]]:
@@ -172,9 +261,40 @@ def select_balanced_matches(
     selected = []
     player_games = {p: 0 for p in players}
     partner_games = {pair: 0 for pair in FIXED_PARTNERS}
+    player_bye_history = {p: [] for p in players}  # Track bye history for each player
 
     def get_constraint(player):
         return PLAYER_CONSTRAINTS.get(player, {})
+
+    def has_player_bye_2_consecutive(player, current_round_num):
+        """
+        检查球员是否已经连续轮空 2 轮。
+        
+        返回 True 如果球员在当前轮次之前已经连续 2 轮没有上场比赛。
+        """
+        history = player_bye_history[player]
+        if len(history) < 2:
+            return False
+        # 检查最近 2 轮是否都是轮空
+        return history[-1] == False and history[-2] == False
+
+    def get_player_consecutive_byes(player):
+        """
+        获取球员当前连续轮空的轮数。
+        
+        返回连续轮空的轮数（0 表示没有连续轮空）。
+        """
+        history = player_bye_history[player]
+        if not history:
+            return 0
+        
+        consecutive_byes = 0
+        for i in range(len(history) - 1, -1, -1):
+            if history[i] == False:
+                consecutive_byes += 1
+            else:
+                break
+        return consecutive_byes
 
     def can_player_play(player, current_round_matches, round_num, total_rounds):
         """
@@ -182,18 +302,23 @@ def select_balanced_matches(
 
         【最高优先级规则】每个轮次中，每个球员在所有场地（1 号、2 号、3 号）只能出现一次！
         这是排阵的核心原则，必须严格保证。
-        
+
         【外援球员规则】外援球员最大场次限制为 5 场，内部员工为 6 场，
         优先保障内部员工的场次。
+
+        【防止冷场规则】球员不能连续轮空 2 轮，第 3 轮必须安排上场。
         """
         constraint = get_constraint(player)
-        fixed_games = constraint.get("fixed_games")
+        # Use dynamic fixed_games calculation based on court availability
+        fixed_games = get_fixed_games_for_player(player, total_matches, len(players))
+        max_games = get_max_games_for_player(player)
 
-        # 检查是否已达到固定场次要求
+        # 【固定场次规则】严格执行 fixed_games 限制
+        # 有 fixed_games 约束的球员，达到固定场次后禁止参赛（不享受冷场规则例外）
         if fixed_games is not None and player_games[player] >= fixed_games:
             return False
+
         # 检查是否已达到最大场次限制（外援 5 场，内部 6 场）
-        max_games = get_max_games_for_player(player)
         if player_games[player] >= max_games:
             return False
 
@@ -203,6 +328,31 @@ def select_balanced_matches(
                 return False  # 该球员已在本轮次上场比赛，不能再参加
 
         return True
+
+    def must_player_play(player):
+        """
+        检查球员是否必须上场（因为已经连续轮空 1 轮）。
+
+        返回 True 如果球员必须上场以避免连续轮空 2 轮。
+
+        注意：有 fixed_games 约束的球员不适用此规则，
+        因为他们有固定的场次安排，会提前离场。
+        """
+        constraint = get_constraint(player)
+        # Use dynamic fixed_games calculation
+        fixed_games = get_fixed_games_for_player(player, total_matches, len(players))
+
+        # 有 fixed_games 约束的球员不适用防止冷场规则
+        if fixed_games is not None:
+            return False
+        
+        consecutive_byes = get_player_consecutive_byes(player)
+        if consecutive_byes >= 1:
+            max_games = get_max_games_for_player(player)
+            if player_games[player] >= max_games:
+                return False
+            return True
+        return False
 
     def can_add_match(match, current_round_matches, round_num, total_rounds):
         match_type = None
@@ -215,6 +365,23 @@ def select_balanced_matches(
         all_females_count = len([p for p in players if p in FEMALE_PLAYERS])
         can_play_womens_doubles = all_females_count >= 4
 
+        # 【防止冷场规则】找出本轮必须上场的球员（已连续轮空 1 轮，且不需要提前离场）
+        must_play_players = []
+        for p in players:
+            constraint = get_constraint(p)
+            # 需提前离场的球员不适用防止冷场规则
+            if constraint.get("early_departure"):
+                continue
+            if must_player_play(p):
+                # 检查该球员是否已在当前轮次上场比赛
+                already_played = False
+                for m in current_round_matches:
+                    if p in get_match_players(m["match"]):
+                        already_played = True
+                        break
+                if not already_played:
+                    must_play_players.append(p)
+        
         for player in get_match_players(match):
             # 检查特殊约束：只打女双的球员不能参加混双（但女双人数不足 4 人时例外）
             constraint = get_constraint(player)
@@ -225,6 +392,21 @@ def select_balanced_matches(
 
             if not can_player_play(player, current_round_matches, round_num, total_rounds):
                 return False
+        
+        # 【防止冷场规则】如果有必须上场的球员，当前比赛必须包含至少一个必须上场的球员
+        # （除非所有必须上场的球员都已在当前轮次上场比赛）
+        if must_play_players:
+            match_players = get_match_players(match)
+            has_must_play_player = any(p in match_players for p in must_play_players)
+            if not has_must_play_player:
+                # 检查是否所有必须上场的球员都已在当前轮次上场比赛
+                played_players = set()
+                for m in current_round_matches:
+                    played_players.update(get_match_players(m["match"]))
+                all_must_play_played = all(p in played_players for p in must_play_players)
+                if not all_must_play_played:
+                    return False  # 这场比赛没有包含必须上场的球员，不允许添加
+        
         return True
 
     def get_match_score(match, round_num):
@@ -232,10 +414,13 @@ def select_balanced_matches(
 
         评分规则：
         1. 有固定场次要求的球员：未完成时大幅减分（最优先）
-        2. 未达到目标场次的球员：减分（优先）
-        3. 外援球员：小幅加分（降低优先级，优先保障内部员工）
-        4. 达到最大场次的球员：大幅加分（最后）
-        5. 固定搭档组合：减分（优先）
+        1. 已达到固定场次的球员 = 禁止参赛（巨额加分）
+        2. 有固定场次要求的球员：未完成时大幅减分（最优先）
+        3. 未达到目标场次的球员：减分（优先）
+        4. 【防止冷场规则】连续轮空 1 轮的球员：中等减分（中等优先级，防止连续轮空 2 轮）
+        5. 外援球员：小幅加分（降低优先级，优先保障内部员工）
+        6. 达到最大场次的球员：大幅加分（最后）
+        7. 固定搭档组合：减分（优先）
         """
         match_players = get_match_players(match)
         scores = []
@@ -247,17 +432,22 @@ def select_balanced_matches(
         for player in match_players:
             constraint = get_constraint(player)
             games = player_games[player]
-            fixed_games = constraint.get("fixed_games")
+            # Use dynamic fixed_games calculation
+            fixed_games = get_fixed_games_for_player(player, total_matches, len(players))
             max_games = get_max_games_for_player(player)
             score = 0
 
-            # 固定场次要求：未完成时大幅减分（最优先）
+            # 优先级 1：已达到固定场次的球员 = 禁止参赛（巨额加分）
+            if fixed_games is not None and games >= fixed_games:
+                score += 10000  # 巨额加分，确保不会被选中
+
+            # 优先级 2：固定场次要求：未完成时大幅减分（最优先）
             if fixed_games is not None:
                 remaining = fixed_games - games
                 if remaining > 0:
                     score -= remaining * 1000
 
-            # 未达到目标场次的球员优先
+            # 优先级 3：未达到目标场次的球员优先
             if games < TARGET_GAMES:
                 score -= (TARGET_GAMES - games) * 200
             elif games >= max_games:
@@ -267,7 +457,14 @@ def select_balanced_matches(
                 # 达到 5 场但未到最大场次，小幅加分
                 score += (games - TARGET_GAMES) * 100
 
-            # 外援球员：小幅加分（降低优先级，优先保障内部员工）
+            # 优先级 4：【防止冷场规则】连续轮空 1 轮的球员，中等减分（中等优先级）
+            # 注意：有 fixed_games 约束的球员不适用此规则（他们提前离场）
+            if fixed_games is None and not constraint.get("early_departure"):
+                consecutive_byes = get_player_consecutive_byes(player)
+                if consecutive_byes >= 1:
+                    score -= 500  # 中等优先级
+
+            # 优先级 5：外援球员：小幅加分（降低优先级，优先保障内部员工）
             if is_guest_player(player):
                 score += 50
 
@@ -502,8 +699,8 @@ def select_balanced_matches(
                 for p in players:
                     if p in played_players:
                         continue
-                    constraint = PLAYER_CONSTRAINTS.get(p, {})
-                    fixed_games = constraint.get("fixed_games")
+                    # Use dynamic fixed_games calculation
+                    fixed_games = get_fixed_games_for_player(p, total_matches, len(players))
                     if fixed_games is not None and player_games[p] >= fixed_games:
                         continue
                     max_games = get_max_games_for_player(p)
@@ -559,6 +756,34 @@ def select_balanced_matches(
 
         if current_round:
             rounds.append(current_round)
+            
+            # 【防止冷场规则】更新球员的轮空历史
+            # 找出本轮上场的球员
+            played_players = set()
+            for m in current_round:
+                played_players.update(get_match_players(m["match"]))
+            
+            # 更新所有球员的轮空历史 (True=上场，False=轮空)
+            for p in players:
+                if p in played_players:
+                    player_bye_history[p].append(True)  # 上场了
+                else:
+                    player_bye_history[p].append(False)  # 轮空了
+
+    # 【防止冷场规则检查】验证没有球员连续轮空 2 轮
+    # 注意：需提前离场的球员不适用此规则（他们离场后就回家了）
+    for player in players:
+        constraint = get_constraint(player)
+        if constraint.get("early_departure"):
+            continue  # 跳过需提前离场的球员
+        
+        history = player_bye_history[player]
+        for i in range(len(history) - 1):
+            if history[i] == False and history[i + 1] == False:
+                raise AssertionError(
+                    f"【防止冷场规则违规】球员 '{player}' 在第{i + 1}轮和第{i + 2}轮连续轮空！"
+                    f"这会导致球员等待时间过长容易冷。"
+                )
 
     # 直接使用已构建的轮次结构
     # 为每个比赛添加轮次和场地信息
@@ -712,10 +937,30 @@ def create_lineup_excel(matches: List[Dict], court_count: int, output_path: str,
 
 
 def main():
-    signup_file = "排阵/微信接龙.txt"
-    with open(signup_file, "r", encoding="utf-8") as f:
-        signup_text = f.read()
+    # Try multiple paths for flexibility
+    possible_paths = [
+        "微信接龙.txt",  # When running from 排阵 directory
+        "排阵/微信接龙.txt",  # When running from project root
+    ]
 
+    signup_text = None
+    for signup_file in possible_paths:
+        try:
+            with open(signup_file, "r", encoding="utf-8") as f:
+                signup_text = f.read()
+            break
+        except FileNotFoundError:
+            continue
+
+    if signup_text is None:
+        print(f"错误：找不到报名文件，请在以下路径之一创建文件:")
+        for path in possible_paths:
+            print(f"  - {path}")
+        return
+
+    # Parse activity date
+    activity_date = parse_activity_date(signup_text)
+    
     males, females = parse_signup(signup_text)
     all_players = males + females
     total_players = len(all_players)
@@ -723,6 +968,8 @@ def main():
     print(f"报名男性 ({len(males)}人): {', '.join(males)}")
     print(f"报名女性 ({len(females)}人): {', '.join(females)}")
     print(f"总人数：{total_players}人")
+    if activity_date:
+        print(f"活动日期：{activity_date}")
 
     court_count = get_court_count(total_players)
     print(f"场地数量：{court_count}个")
@@ -731,14 +978,30 @@ def main():
     mens_matches = generate_mens_doubles_matches(males)
     womens_matches = generate_womens_doubles_matches(females)
 
+    # Calculate actual available player-games
+    total_available_games = 0
+    for p in all_players:
+        constraint = PLAYER_CONSTRAINTS.get(p, {})
+        # Use dynamic fixed_games calculation based on court availability
+        fixed_games = get_fixed_games_for_player(p, target_matches, len(all_players))
+        if fixed_games is not None:
+            total_available_games += fixed_games
+        else:
+            total_available_games += get_max_games_for_player(p)
+    
+    # Each match requires 4 player-games
+    max_possible_matches = total_available_games // 4
+    target_matches = MATCHES_PER_COURT * court_count
+    total_matches = min(max_possible_matches, target_matches)
+
     print(f"\n配置参数:")
     print(f"  - 每场地比赛数：{MATCHES_PER_COURT}场")
-    print(f"  - 总比赛数：{MATCHES_PER_COURT * court_count}场")
+    print(f"  - 可用总人次：{total_available_games}")
+    print(f"  - 理论最大比赛数：{max_possible_matches}场")
+    print(f"  - 目标比赛数：{target_matches}场")
+    print(f"  - 实际比赛数：{total_matches}场（受限于球员场次）")
     print(f"  - 内部员工最大场次：{MAX_GAMES_INTERNAL}场")
     print(f"  - 外援球员最大场次：{MAX_GAMES_GUEST}场（优先保障内部员工）")
-
-    matches_per_court = MATCHES_PER_COURT
-    total_matches = matches_per_court * court_count
 
     selected_matches = select_balanced_matches(
         mixed_matches, mens_matches, womens_matches, total_matches, court_count, all_players, males, females
@@ -782,6 +1045,9 @@ def main():
             print(f"  本轮轮空 ({len(round_bye_players)}人): {', '.join(sorted(round_bye_players))}")
     
     print("\n✓ 核心规则检查通过：无球员在同一轮次重复出现")
+    
+    # 【防止冷场规则检查】输出检查结果
+    print("✓ 防止冷场规则检查通过：无球员连续轮空 2 轮")
 
     print(f"\n球员参赛场次统计:")
     player_games = {}
@@ -798,15 +1064,15 @@ def main():
 
     for player in sorted(all_players):
         games = player_games.get(player, 0)
-        constraint = PLAYER_CONSTRAINTS.get(player, {})
+        # Use dynamic fixed_games calculation for display
+        fixed_games = get_fixed_games_for_player(player, total_matches, len(all_players))
         note = ""
-        fixed_games = constraint.get("fixed_games")
         if fixed_games is not None:
             if games == fixed_games:
                 note = f" (已完成{fixed_games}场)"
             elif games < fixed_games:
                 note = f" (目标{fixed_games}场，还差{fixed_games - games}场)"
-        if constraint.get("early_departure"):
+        if PLAYER_CONSTRAINTS.get(player, {}).get("early_departure"):
             note += " [需提前离场]"
         type_stats = player_type_games.get(player, {"男双": 0, "女双": 0, "混双": 0})
         type_str = f"(男{type_stats['男双']}/女{type_stats['女双']}/混{type_stats['混双']})"
@@ -822,8 +1088,29 @@ def main():
             "混双": type_stats["混双"]
         }
 
-    output_path = "排阵/对阵表.xlsx"
-    create_lineup_excel(selected_matches, court_count, output_path, player_stats)
+    # Try multiple paths for flexibility
+    possible_output_paths = [
+        "对阵表.xlsx",  # When running from 排阵 directory
+        "排阵/对阵表.xlsx",  # When running from project root
+    ]
+    
+    output_path = possible_output_paths[0]
+    for path in possible_output_paths:
+        try:
+            # Test if we can write to this path
+            with open(path, 'wb') as f:
+                f.close()
+            import os
+            os.remove(path)  # Remove test file
+            output_path = path
+            break
+        except (IOError, OSError):
+            continue
+    
+    create_lineup_excel(
+        selected_matches, court_count, output_path, player_stats,
+        activity_date=activity_date
+)
 
 
 if __name__ == "__main__":
