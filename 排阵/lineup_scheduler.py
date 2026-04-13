@@ -759,7 +759,7 @@ def create_lineup_excel(matches: List[Dict], court_count: int, output_path: str,
 
     max_row = len(matches) + 3
     for row in ws.iter_rows(min_row=1, max_row=max_row if max_row > 3 else 20):
-        ws.row_dimensions[row[0].row].height = 32
+        ws.row_dimensions[row[0].row].height = 27
 
     ws.page_setup.paperSize = 9
     ws.page_setup.orientation = "landscape"
