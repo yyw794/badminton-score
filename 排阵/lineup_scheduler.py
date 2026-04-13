@@ -408,7 +408,7 @@ def select_balanced_matches(
         
         return True
 
-    def get_match_score(match, round_num):
+    def get_match_score(match, round_num, is_womens_doubles=False):
         """评分越低越优先被选中。
 
         评分规则：
@@ -420,6 +420,7 @@ def select_balanced_matches(
         5. 外援球员：小幅加分（降低优先级，优先保障内部员工）
         6. 达到最大场次的球员：大幅加分（最后）
         7. 固定搭档组合：减分（优先）
+        8. 女双比赛：大幅减分（4 个女生难得，优先安排）
         """
         match_players = get_match_players(match)
         scores = []
@@ -476,6 +477,16 @@ def select_balanced_matches(
                 weight = FIXED_PARTNERS[pair_key]
                 scores.append(-weight * 30)
 
+        # 优先级 8：女双比赛大幅减分（4 个女生难得，优先安排）
+        if is_womens_doubles and womens_used < womens_target:
+            remaining_womens = womens_target - womens_used
+            # 早期轮次更大减分，确保前几轮多安排女双
+            round_bonus = 3000 if round_num <= 4 else 1500
+            scores.append(-remaining_womens * round_bonus)  # 女双未完成时巨额减分，确保优先
+        # 即使达到目标后，女双仍保持一定优先级
+        elif is_womens_doubles:
+            scores.append(-300)  # 女双始终有一定优先级
+
         return sum(scores) / len(scores) if scores else float('inf')
 
     mixed_pool = list(mixed_matches)
@@ -487,12 +498,17 @@ def select_balanced_matches(
     random.shuffle(womens_pool)
 
     # 预设比赛类型比例和目标数量
-    # 混双目标：约 30-35%（混双资格男性只有 4 人，女性 5 人，最多约 8-10 场）
-    # 女双目标：约 25%（女性 5 人，最多约 6-7 场）
-    # 男双剩余：约 40-45%
-    mixed_target = int(total_matches * 0.33)  # 混双约 33% (8 场)
-    womens_target = int(total_matches * 0.25)  # 女双约 25% (6 场)
-    mens_target = total_matches - mixed_target - womens_target  # 男双剩余 (约 42%)
+    # 根据实际女性人数动态调整女双比例
+    womens_count = len(females)
+    if womens_count >= 4:
+        # 4 个女生：女双目标 3-4 场
+        mixed_target = int(total_matches * 0.28)
+        womens_target = 4
+    else:
+        mixed_target = int(total_matches * 0.33)
+        womens_target = 0
+
+    mens_target = total_matches - mixed_target - womens_target
 
     mixed_used = 0
     mens_used = 0
@@ -535,11 +551,11 @@ def select_balanced_matches(
             if mens_pool:
                 for match in mens_pool:
                     if can_add_match(match, current_round, current_round_num, total_rounds):
-                        score = get_match_score(match, current_round_num)
+                        score = get_match_score(match, current_round_num, is_womens_doubles=False)
                         if score < best_score:
                             best_score = score
                             best_match = match
-        
+
         # 如果没有找到 fallback 比赛，尝试原池子
         if not best_match and pool:
             for match in pool:
@@ -556,7 +572,8 @@ def select_balanced_matches(
 
                 if not can_add_match(match, current_round, current_round_num, total_rounds):
                     continue
-                score = get_match_score(match, current_round_num)
+                is_wd = (match_type_name == "womens")
+                score = get_match_score(match, current_round_num, is_womens_doubles=is_wd)
                 if score < best_score:
                     best_score = score
                     best_match = match
@@ -600,31 +617,25 @@ def select_balanced_matches(
         return False, current_count
 
     # 多轮填充：每轮尝试填满所有场地
-    # 策略：交替安排女双和混双，确保两种类型都有足够比例
-    # 第 1、4、7...轮优先女双，第 2、5、8...轮优先混双，第 3、6、9...轮优先男双
+    # 策略：女双始终最优先，直到达到目标
+    # 放宽女双目标限制，在未达到目标前不计上限
     type_priorities_default = [
-        ("womens", lambda: womens_used, lambda: womens_target + 1, womens_pool),  # 女双
-        ("mixed", lambda: mixed_used, lambda: mixed_target + 1, mixed_pool),  # 混双
-        ("mens", lambda: mens_used, lambda: mens_target + 2, mens_pool),  # 男双
+        ("womens", lambda: womens_used, lambda: womens_target + 10, womens_pool),  # 女双最优先（大幅放宽上限）
+        ("mixed", lambda: mixed_used, lambda: mixed_target + 10, mixed_pool),  # 混双次优先（也放宽）
+        ("mens", lambda: mens_used, lambda: mens_target + 10, mens_pool),  # 男双最后
     ]
-    
-    # 混双优先的轮次（确保混双比例）
-    type_priorities_mixed_first = [
-        ("mixed", lambda: mixed_used, lambda: mixed_target + 2, mixed_pool),  # 混双最优先（放宽限制）
-        ("womens", lambda: womens_used, lambda: womens_target + 1, womens_pool),  # 女双次优先
-        ("mens", lambda: mens_used, lambda: mens_target + 2, mens_pool),  # 男双最后
-    ]
-    
+
+    # 所有轮次都用同样的优先级（女双始终优先）
+    type_priorities_mixed_first = type_priorities_default
+
     for round_num in range(total_rounds):
         current_round = []
 
-        # 交替优先级：第 1、4、7 轮女双优先，第 2、5、8 轮混双优先，第 3、6、9 轮默认
-        if round_num % 3 == 0:
-            type_priorities = type_priorities_default  # 女双优先
-        elif round_num % 3 == 1:
-            type_priorities = type_priorities_mixed_first  # 混双优先
+        # 交替优先级：奇数轮女双优先，偶数轮混双优先
+        if round_num % 2 == 0:
+            type_priorities = type_priorities_default  # 女双优先（0, 2, 4...）
         else:
-            type_priorities = type_priorities_default  # 默认
+            type_priorities = type_priorities_mixed_first  # 混双优先（1, 3, 5...）
 
         # 尝试填满当前轮次的所有场地
         for court_slot in range(court_count):
