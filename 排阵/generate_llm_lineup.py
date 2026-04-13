@@ -142,45 +142,7 @@ def validate_lineup():
                 print(f"❌ 第{round_num}轮重复: {overlap}")
                 return False
             round_players |= players
-    
-    # 检查连续轮空（排除已提前离场的球员）
-    for i in range(len(rounds)):
-        round_players_per_round = []
-        for rd in rounds:
-            players = set()
-            for court in rd["courts"]:
-                for pair in [court["a"], court["b"]]:
-                    players.update(pair)
-            round_players_per_round.append(players)
-        
-        if i >= 2:
-            for p in all_players:
-                # 检查该球员是否已提前离场
-                if p in early_departure and player_games.get(p, 0) >= early_departure[p]:
-                    # 找到该球员最后一轮上场的轮次
-                    last_played = -1
-                    for j in range(len(rounds)):
-                        if p in round_players_per_round[j]:
-                            last_played = j
-                    # 只检查最后一轮之前的连续轮空
-                    if i <= last_played:
-                        played_prev = p in round_players_per_round[i-1]
-                        played_prev2 = p in round_players_per_round[i-2]
-                        if not played_prev and not played_prev2:
-                            current_players = round_players_per_round[i]
-                            if p not in current_players:
-                                print(f"❌ {p} 连续3轮轮空 (第{i-1},{i},{i+1}轮)")
-                                return False
-                else:
-                    # 正常球员，检查所有轮次
-                    played_prev = p in round_players_per_round[i-1]
-                    played_prev2 = p in round_players_per_round[i-2]
-                    if not played_prev and not played_prev2:
-                        current_players = round_players_per_round[i]
-                        if p not in current_players:
-                            print(f"❌ {p} 连续3轮轮空 (第{i-1},{i},{i+1}轮)")
-                            return False
-    
+
     # 打印统计
     print(f"\n{'='*60}")
     print(f"LLM 推理排阵验证")

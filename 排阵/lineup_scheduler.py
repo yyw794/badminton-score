@@ -260,40 +260,9 @@ def select_balanced_matches(
     selected = []
     player_games = {p: 0 for p in players}
     partner_games = {pair: 0 for pair in FIXED_PARTNERS}
-    player_bye_history = {p: [] for p in players}  # Track bye history for each player
 
     def get_constraint(player):
         return PLAYER_CONSTRAINTS.get(player, {})
-
-    def has_player_bye_2_consecutive(player, current_round_num):
-        """
-        检查球员是否已经连续轮空 2 轮。
-        
-        返回 True 如果球员在当前轮次之前已经连续 2 轮没有上场比赛。
-        """
-        history = player_bye_history[player]
-        if len(history) < 2:
-            return False
-        # 检查最近 2 轮是否都是轮空
-        return history[-1] == False and history[-2] == False
-
-    def get_player_consecutive_byes(player):
-        """
-        获取球员当前连续轮空的轮数。
-        
-        返回连续轮空的轮数（0 表示没有连续轮空）。
-        """
-        history = player_bye_history[player]
-        if not history:
-            return 0
-        
-        consecutive_byes = 0
-        for i in range(len(history) - 1, -1, -1):
-            if history[i] == False:
-                consecutive_byes += 1
-            else:
-                break
-        return consecutive_byes
 
     def can_player_play(player, current_round_matches, round_num, total_rounds):
         """
@@ -304,8 +273,6 @@ def select_balanced_matches(
 
         【外援球员规则】外援球员最大场次限制为 5 场，内部员工为 6 场，
         优先保障内部员工的场次。
-
-        【防止冷场规则】球员不能连续轮空 2 轮，第 3 轮必须安排上场。
         """
         constraint = get_constraint(player)
         # Use dynamic fixed_games calculation based on court availability
@@ -328,31 +295,6 @@ def select_balanced_matches(
 
         return True
 
-    def must_player_play(player):
-        """
-        检查球员是否必须上场（因为已经连续轮空 1 轮）。
-
-        返回 True 如果球员必须上场以避免连续轮空 2 轮。
-
-        注意：有 fixed_games 约束的球员不适用此规则，
-        因为他们有固定的场次安排，会提前离场。
-        """
-        constraint = get_constraint(player)
-        # Use dynamic fixed_games calculation
-        fixed_games = get_fixed_games_for_player(player, total_matches, len(players))
-
-        # 有 fixed_games 约束的球员不适用防止冷场规则
-        if fixed_games is not None:
-            return False
-        
-        consecutive_byes = get_player_consecutive_byes(player)
-        if consecutive_byes >= 1:
-            max_games = get_max_games_for_player(player)
-            if player_games[player] >= max_games:
-                return False
-            return True
-        return False
-
     def can_add_match(match, current_round_matches, round_num, total_rounds):
         match_type = None
         for m in current_round_matches:
@@ -364,23 +306,6 @@ def select_balanced_matches(
         all_females_count = len([p for p in players if p in FEMALE_PLAYERS])
         can_play_womens_doubles = all_females_count >= 4
 
-        # 【防止冷场规则】找出本轮必须上场的球员（已连续轮空 1 轮，且不需要提前离场）
-        must_play_players = []
-        for p in players:
-            constraint = get_constraint(p)
-            # 需提前离场的球员不适用防止冷场规则
-            if constraint.get("early_departure"):
-                continue
-            if must_player_play(p):
-                # 检查该球员是否已在当前轮次上场比赛
-                already_played = False
-                for m in current_round_matches:
-                    if p in get_match_players(m["match"]):
-                        already_played = True
-                        break
-                if not already_played:
-                    must_play_players.append(p)
-        
         for player in get_match_players(match):
             # 检查特殊约束：只打女双的球员不能参加混双（但女双人数不足 4 人时例外）
             constraint = get_constraint(player)
@@ -391,36 +316,20 @@ def select_balanced_matches(
 
             if not can_player_play(player, current_round_matches, round_num, total_rounds):
                 return False
-        
-        # 【防止冷场规则】如果有必须上场的球员，当前比赛必须包含至少一个必须上场的球员
-        # （除非所有必须上场的球员都已在当前轮次上场比赛）
-        if must_play_players:
-            match_players = get_match_players(match)
-            has_must_play_player = any(p in match_players for p in must_play_players)
-            if not has_must_play_player:
-                # 检查是否所有必须上场的球员都已在当前轮次上场比赛
-                played_players = set()
-                for m in current_round_matches:
-                    played_players.update(get_match_players(m["match"]))
-                all_must_play_played = all(p in played_players for p in must_play_players)
-                if not all_must_play_played:
-                    return False  # 这场比赛没有包含必须上场的球员，不允许添加
-        
+
         return True
 
     def get_match_score(match, round_num, is_womens_doubles=False):
         """评分越低越优先被选中。
 
         评分规则：
-        1. 有固定场次要求的球员：未完成时大幅减分（最优先）
         1. 已达到固定场次的球员 = 禁止参赛（巨额加分）
-        2. 有固定场次要求的球员：未完成时大幅减分（最优先）
-        3. 未达到目标场次的球员：减分（优先）
-        4. 【防止冷场规则】连续轮空 1 轮的球员：中等减分（中等优先级，防止连续轮空 2 轮）
-        5. 外援球员：小幅加分（降低优先级，优先保障内部员工）
-        6. 达到最大场次的球员：大幅加分（最后）
-        7. 固定搭档组合：减分（优先）
-        8. 女双比赛：大幅减分（4 个女生难得，优先安排）
+        2. 固定场次要求：未完成时大幅减分（最优先）
+        3. 未达到目标场次的球员优先
+        4. 外援球员：小幅加分（降低优先级，优先保障内部员工）
+        5. 达到最大场次的球员：大幅加分（最后）
+        6. 固定搭档组合：减分（优先）
+        7. 女双比赛：大幅减分（4 个女生难得，优先安排）
         """
         match_players = get_match_players(match)
         scores = []
@@ -457,14 +366,7 @@ def select_balanced_matches(
                 # 达到 5 场但未到最大场次，小幅加分
                 score += (games - TARGET_GAMES) * 100
 
-            # 优先级 4：【防止冷场规则】连续轮空 1 轮的球员，中等减分（中等优先级）
-            # 注意：有 fixed_games 约束的球员不适用此规则（他们提前离场）
-            if fixed_games is None and not constraint.get("early_departure"):
-                consecutive_byes = get_player_consecutive_byes(player)
-                if consecutive_byes >= 1:
-                    score -= 500  # 中等优先级
-
-            # 优先级 5：外援球员：小幅加分（降低优先级，优先保障内部员工）
+            # 优先级 4：外援球员：小幅加分（降低优先级，优先保障内部员工）
             if is_guest_player(player):
                 score += 50
 
@@ -772,28 +674,8 @@ def select_balanced_matches(
             played_players = set()
             for m in current_round:
                 played_players.update(get_match_players(m["match"]))
-            
-            # 更新所有球员的轮空历史 (True=上场，False=轮空)
-            for p in players:
-                if p in played_players:
-                    player_bye_history[p].append(True)  # 上场了
-                else:
-                    player_bye_history[p].append(False)  # 轮空了
 
-    # 【防止冷场规则检查】验证没有球员连续轮空 2 轮
-    # 注意：需提前离场的球员不适用此规则（他们离场后就回家了）
-    for player in players:
-        constraint = get_constraint(player)
-        if constraint.get("early_departure"):
-            continue  # 跳过需提前离场的球员
-        
-        history = player_bye_history[player]
-        for i in range(len(history) - 1):
-            if history[i] == False and history[i + 1] == False:
-                raise AssertionError(
-                    f"【防止冷场规则违规】球员 '{player}' 在第{i + 1}轮和第{i + 2}轮连续轮空！"
-                    f"这会导致球员等待时间过长容易冷。"
-                )
+    # 【核心规则检查】验证没有球员在同一轮次重复出现
 
     # 直接使用已构建的轮次结构
     # 为每个比赛添加轮次和场地信息
@@ -1060,9 +942,6 @@ def main():
             print(f"  本轮轮空 ({len(round_bye_players)}人): {', '.join(sorted(round_bye_players))}")
     
     print("\n✓ 核心规则检查通过：无球员在同一轮次重复出现")
-    
-    # 【防止冷场规则检查】输出检查结果
-    print("✓ 防止冷场规则检查通过：无球员连续轮空 2 轮")
 
     print(f"\n球员参赛场次统计:")
     player_games = {}

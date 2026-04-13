@@ -96,7 +96,6 @@ class LLMLineupScheduler:
 
         # State tracking
         self.player_games = {p: 0 for p in self.all_players}
-        self.player_bye_history = {p: [] for p in self.all_players}  # True=played, False=bye
         self.partner_games = {pair: 0 for pair in FIXED_PARTNERS}
         self.scheduled_matches = []
         self.rounds = []
@@ -171,21 +170,7 @@ class LLMLineupScheduler:
     def _get_constraint(self, player: str) -> dict:
         """Get player constraints."""
         return PLAYER_CONSTRAINTS.get(player, {})
-    
-    def _get_consecutive_byes(self, player: str) -> int:
-        """Get consecutive bye count for a player."""
-        history = self.player_bye_history[player]
-        if not history:
-            return 0
-        
-        consecutive = 0
-        for i in range(len(history) - 1, -1, -1):
-            if history[i] == False:  # False means bye
-                consecutive += 1
-            else:
-                break
-        return consecutive
-    
+
     def _can_player_play(self, player: str, current_round_matches: List[Dict]) -> bool:
         """
         Check if a player can play in the current round.
@@ -215,49 +200,11 @@ class LLMLineupScheduler:
 
         return True
 
-    def _must_player_play(self, player: str) -> bool:
-        """
-        Check if a player must play to avoid consecutive byes.
-
-        Note: Players with fixed_games constraint are EXCLUDED from this rule,
-        because they have a fixed number of games to play and will leave early.
-        """
-        constraint = self._get_constraint(player)
-        # Use dynamic fixed_games calculation
-        fixed_games = get_fixed_games_for_player(player, self.court_count, self.total_players, self.total_matches)
-
-        # Players with fixed_games are excluded from anti-cold rule
-        # They have a fixed schedule and will leave early
-        if fixed_games is not None:
-            return False
-        
-        consecutive_byes = self._get_consecutive_byes(player)
-        if consecutive_byes >= 1:
-            max_games = get_max_games_for_player(player, self.court_count, self.total_players)
-            if self.player_games[player] >= max_games:
-                return False
-            return True
-        return False
-    
     def _can_add_match(self, match, current_round_matches: List[Dict], match_type: str) -> bool:
         """Check if a match can be added to the current round."""
         all_females_count = len(self.females)
         can_play_womens_doubles = all_females_count >= 4
-        
-        # Find must-play players
-        must_play_players = []
-        for p in self.all_players:
-            constraint = self._get_constraint(p)
-            if constraint.get("early_departure"):
-                continue
-            if self._must_player_play(p):
-                already_played = any(
-                    p in get_match_players(m["match"])
-                    for m in current_round_matches
-                )
-                if not already_played:
-                    must_play_players.append(p)
-        
+
         # Check each player in the match
         for player in get_match_players(match):
             # Check special constraint: only_womens_doubles
@@ -265,24 +212,12 @@ class LLMLineupScheduler:
             if constraint.get("only_womens_doubles"):
                 if match_type != "女双" and can_play_womens_doubles:
                     return False
-            
+
             if not self._can_player_play(player, current_round_matches):
                 return False
-        
-        # 【Anti-cold rule】If there are must-play players, current match must include at least one
-        if must_play_players:
-            match_players = get_match_players(match)
-            has_must_play = any(p in match_players for p in must_play_players)
-            if not has_must_play:
-                played_players = set()
-                for m in current_round_matches:
-                    played_players.update(get_match_players(m["match"]))
-                all_must_played = all(p in played_players for p in must_play_players)
-                if not all_must_played:
-                    return False
-        
+
         return True
-    
+
     def _calculate_match_priority(self, match, match_type: str, round_num: int) -> float:
         """
         Calculate match priority score (lower is better).
@@ -328,18 +263,9 @@ class LLMLineupScheduler:
             else:
                 score += (games - TARGET_GAMES) * 100
 
-            # Priority 4: Consecutive byes (anti-cold)
-            # Note: Players with fixed_games are excluded from anti-cold rule
-            if not constraint.get("early_departure") and fixed_games is None:
-                consecutive_byes = self._get_consecutive_byes(player)
-                if consecutive_byes >= 1:
-                    score -= 500  # Medium priority
-
-            # Priority 5: Guest player (lower priority when courts are limited)
-            # If courts are abundant, don't penalize guest players
-            courts_per_player = self.court_count / self.total_players if self.total_players > 0 else 0
-            if is_guest_player(player) and courts_per_player < 0.2:
-                score += 50  # Only penalize when courts are limited
+            # Priority 4: Guest players (lower priority)
+            if is_guest_player(player):
+                score += 50
 
             scores.append(score)
 
@@ -370,26 +296,19 @@ class LLMLineupScheduler:
         return best_match
     
     def _update_player_history(self, round_matches: List[Dict]):
-        """Update player game counts and bye history after a round."""
+        """Update player game counts after a round."""
         played_players = set()
         for m in round_matches:
             played_players.update(get_match_players(m["match"]))
             for player in get_match_players(m["match"]):
                 self.player_games[player] += 1
-            
+
             # Update partner games
             pair_a, pair_b = m["match"]
             for pair in [pair_a, pair_b]:
                 pair_key = get_pair_key(pair[0], pair[1])
                 if pair_key in self.partner_games:
                     self.partner_games[pair_key] += 1
-        
-        # Update bye history
-        for p in self.all_players:
-            if p in played_players:
-                self.player_bye_history[p].append(True)
-            else:
-                self.player_bye_history[p].append(False)
     
     def _get_match_type_display(self, base_type: str, is_fallback: bool = False) -> str:
         """Get display name for match type."""
@@ -608,37 +527,6 @@ class LLMLineupScheduler:
                             f"【核心规则违规】第{round_idx + 1}轮：球员 {p} 重复出现"
                         )
                     round_players.add(p)
-        
-        # Check anti-cold rule: no consecutive byes (soft constraint)
-        # This is a preference, not a hard constraint
-        # When mathematically impossible, we allow it with a warning
-        consecutive_bye_violations = []
-        
-        for player in self.all_players:
-            constraint = self._get_constraint(player)
-            if constraint.get("early_departure"):
-                continue
-            
-            # Check if player reached max games
-            max_games = get_max_games_for_player(player, self.court_count, self.total_players)
-            if self.player_games[player] >= max_games:
-                continue  # Player can rest after reaching max games
-
-            history = self.player_bye_history[player]
-            for i in range(len(history) - 1):
-                if history[i] == False and history[i + 1] == False:
-                    consecutive_bye_violations.append(player)
-
-        if consecutive_bye_violations:
-            # Report as warning, not error
-            from collections import Counter
-            violation_counts = Counter(consecutive_bye_violations)
-            print(f"\n⚠️  注意：有 {len(violation_counts)} 位球员连续轮空（数学上难以避免）:")
-            for player, count in violation_counts.items():
-                print(f"    - {player}: {count}次")
-            print(f"  建议：增加球员数量或减少场地数量\n")
-        else:
-            print("✓ 防止冷场规则检查通过：无球员连续轮空")
 
         print("✓ 核心规则验证通过")
 
