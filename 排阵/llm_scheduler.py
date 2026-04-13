@@ -31,7 +31,6 @@ PLAYER_CONSTRAINTS = {
 
 # Fixed partner pairs
 FIXED_PARTNERS = {
-    ("苏大哲", "罗蒙"): 5,
 }
 
 # Global config
