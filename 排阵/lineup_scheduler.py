@@ -379,15 +379,11 @@ def select_balanced_matches(
                 weight = FIXED_PARTNERS[pair_key]
                 scores.append(-weight * 30)
 
-        # 优先级 8：女双比赛大幅减分（4 个女生难得，优先安排）
+        # 优先级 8：女双比赛减分（4 个女生难得，优先安排，但不超过目标）
         if is_womens_doubles and womens_used < womens_target:
             remaining_womens = womens_target - womens_used
-            # 早期轮次更大减分，确保前几轮多安排女双
-            round_bonus = 3000 if round_num <= 4 else 1500
-            scores.append(-remaining_womens * round_bonus)  # 女双未完成时巨额减分，确保优先
-        # 即使达到目标后，女双仍保持一定优先级
-        elif is_womens_doubles:
-            scores.append(-300)  # 女双始终有一定优先级
+            round_bonus = 1500 if round_num <= 3 else 600
+            scores.append(-remaining_womens * round_bonus)
 
         return sum(scores) / len(scores) if scores else float('inf')
 
@@ -435,8 +431,10 @@ def select_balanced_matches(
         """
         nonlocal current_round, mixed_used, mens_used, womens_used
 
-        # 如果已达到目标数量，跳过（除非其他类型都无法添加）
-        if current_count >= target_count + 2:  # 允许稍微超出
+        # 如果已达到目标数量，跳过（女双严格限制，其他类型允许稍微超出）
+        if match_type_name == "womens" and current_count >= womens_target:
+            return False, current_count
+        if match_type_name != "womens" and current_count >= target_count + 2:
             return False, current_count
 
         current_round_num = len(rounds) + 1
