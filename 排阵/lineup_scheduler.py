@@ -805,7 +805,7 @@ def select_balanced_matches(
     return selected
 
 
-def create_lineup_excel(matches: List[Dict], court_count: int, output_path: str, player_stats: Dict = None):
+def create_lineup_excel(matches: List[Dict], court_count: int, output_path: str, player_stats: Dict = None, activity_date: str = None):
     """Create Excel file with lineup schedule."""
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -819,7 +819,10 @@ def create_lineup_excel(matches: List[Dict], court_count: int, output_path: str,
     header_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
 
     ws.merge_cells("A1:G1")
-    ws["A1"] = "科技球队日常训练活动 - 对阵表"
+    title = "科技球队日常训练活动 - 对阵表"
+    if activity_date:
+        title = f"科技球队日常训练活动 - 对阵表（{activity_date}）"
+    ws["A1"] = title
     ws["A1"].font = font_title
     ws["A1"].alignment = alignment_center
     ws["A1"].border = border
@@ -978,16 +981,18 @@ def main():
     womens_matches = generate_womens_doubles_matches(females)
 
     # Calculate actual available player-games
+    court_count_temp = get_court_count(len(all_players))
+    target_matches_temp = MATCHES_PER_COURT * court_count_temp
     total_available_games = 0
     for p in all_players:
         constraint = PLAYER_CONSTRAINTS.get(p, {})
         # Use dynamic fixed_games calculation based on court availability
-        fixed_games = get_fixed_games_for_player(p, target_matches, len(all_players))
+        fixed_games = get_fixed_games_for_player(p, target_matches_temp, len(all_players))
         if fixed_games is not None:
             total_available_games += fixed_games
         else:
             total_available_games += get_max_games_for_player(p)
-    
+
     # Each match requires 4 player-games
     max_possible_matches = total_available_games // 4
     target_matches = MATCHES_PER_COURT * court_count
