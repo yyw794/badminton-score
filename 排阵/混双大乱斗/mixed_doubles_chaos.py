@@ -15,7 +15,8 @@ def generate_mixed_doubles_matches(
     group_a_males: List[str],
     group_b_females: List[str],
     court_count: int = 2,
-    mode: str = "fair"
+    mode: str = "fair",
+    priority_players: List[str] = None
 ) -> List[Dict]:
     """
     生成混双大乱斗对阵表
@@ -27,6 +28,7 @@ def generate_mixed_doubles_matches(
         mode: 排阵模式
             - "fair": 公平模式，每个男队员与每个女队员组合一次（推荐）
             - "max": 最大场次模式，尽可能多的比赛
+        priority_players: 需要优先排阵的球员列表（如需要提前回家的球员）
     
     Returns:
         比赛列表，每个元素包含：
@@ -38,7 +40,7 @@ def generate_mixed_doubles_matches(
     matches = []
     
     if mode == "fair":
-        return _generate_fair_mode(group_a_males, group_b_females, court_count)
+        return _generate_fair_mode(group_a_males, group_b_females, court_count, priority_players)
     else:
         return _generate_max_mode(group_a_males, group_b_females, court_count)
 
@@ -46,7 +48,8 @@ def generate_mixed_doubles_matches(
 def _generate_fair_mode(
     group_a_males: List[str],
     group_b_females: List[str],
-    court_count: int = 2
+    court_count: int = 2,
+    priority_players: List[str] = None
 ) -> List[Dict]:
     """
     公平模式：严格按照优先级生成赛程
@@ -56,8 +59,15 @@ def _generate_fair_mode(
     2. 【必须】休息1轮后必须上场
     3. 【可选】每个男队员尽量和不同女队员搭配
     4. 【可选】尽量每轮2个场地并发
+    5. 【特殊】指定球员优先排阵（不休息，排在前面轮次）
+    
+    Args:
+        priority_players: 需要优先排阵的球员列表（如需要提前回家的球员）
     """
     import random
+    
+    if priority_players is None:
+        priority_players = []
     
     males = group_a_males[:]
     females = group_b_females[:]
@@ -106,7 +116,12 @@ def _generate_fair_mode(
                         # 计算优先级分数
                         priority = 0
                         
-                        # 优先级2【必须】：包含上一轮休息且未满6场的球员（最高优先级）
+                        # 优先级5【特殊】：包含优先排阵球员（最高优先级）
+                        priority_in_match = match_players & set(priority_players)
+                        can_play_priority = [p for p in priority_in_match if player_games[p] < target_games]
+                        priority += len(can_play_priority) * 50000
+                        
+                        # 优先级2【必须】：包含上一轮休息且未满6场的球员（高优先级）
                         rested_in_match = match_players & rested_last_round
                         can_play = [p for p in rested_in_match if player_games[p] < target_games]
                         priority += len(can_play) * 10000
@@ -454,13 +469,14 @@ def main():
     print(f"\nA组男队员 ({len(group_a_males)}人): {', '.join(group_a_males)}")
     print(f"B组女队员 ({len(group_b_females)}人): {', '.join(group_b_females)}")
     
-    # 生成对阵表
-    print(f"\n正在生成对阵表（2个场地并发）...")
+    # 生成对阵表（崔倩男优先排阵）
+    print(f"\n正在生成对阵表（2个场地并发，崔倩男优先排阵）...")
     matches = generate_mixed_doubles_matches(
         group_a_males=group_a_males,
         group_b_females=group_b_females,
         court_count=2,
-        mode="fair"  # 公平模式：每人6场
+        mode="fair",  # 公平模式：每人6场
+        priority_players=["崔倩男"]  # 崔倩男优先排阵，不休息
     )
     
     if not matches:
