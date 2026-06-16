@@ -53,11 +53,11 @@ def calculate_stats(json_path):
     
     matches = data["matches"]
     
-    # 统计每个人的胜负（按局统计）
-    player_stats = defaultdict(lambda: {"wins": 0, "losses": 0, "matches": []})
+    # 统计每个人的胜负（按局统计）+ 净胜分
+    player_stats = defaultdict(lambda: {"wins": 0, "losses": 0, "net_score": 0, "matches": []})
     
-    # 统计每种类型的胜负（按选手在该类型的表现，按局统计）
-    type_stats = defaultdict(lambda: defaultdict(lambda: {"wins": 0, "losses": 0, "matches": []}))
+    # 统计每种类型的胜负（按选手在该类型的表现，按局统计）+ 净胜分
+    type_stats = defaultdict(lambda: defaultdict(lambda: {"wins": 0, "losses": 0, "net_score": 0, "matches": []}))
     
     print("=" * 60)
     print(f"比赛日期: {data['match_date']}")
@@ -110,6 +110,9 @@ def calculate_stats(json_path):
                 first_winner = team_b
                 first_loser = team_a
             
+            # 计算第1局净胜分
+            set1_net = score_a1 - score_b1  # 正值表示对阵A净胜，负值表示对阵B净胜
+            
             for player in team_a:
                 player_stats[player]["matches"].append({
                     "round": match["round"],
@@ -132,6 +135,9 @@ def calculate_stats(json_path):
                 else:
                     player_stats[player]["losses"] += 1
                     type_stats[match_type][player]["losses"] += 1
+                # 净胜分：对阵A方获得 set1_net
+                player_stats[player]["net_score"] += set1_net
+                type_stats[match_type][player]["net_score"] += set1_net
             
             for player in team_b:
                 player_stats[player]["matches"].append({
@@ -155,6 +161,9 @@ def calculate_stats(json_path):
                 else:
                     player_stats[player]["losses"] += 1
                     type_stats[match_type][player]["losses"] += 1
+                # 净胜分：对阵B方获得 -set1_net
+                player_stats[player]["net_score"] -= set1_net
+                type_stats[match_type][player]["net_score"] -= set1_net
         
         # 第2局统计
         if score_a2 is not None and score_b2 is not None:
@@ -165,6 +174,9 @@ def calculate_stats(json_path):
                 second_winner = team_b
                 second_loser = team_a
             
+            # 计算第2局净胜分
+            set2_net = score_a2 - score_b2
+            
             for player in team_a:
                 player_stats[player]["matches"].append({
                     "round": match["round"],
@@ -187,6 +199,8 @@ def calculate_stats(json_path):
                 else:
                     player_stats[player]["losses"] += 1
                     type_stats[match_type][player]["losses"] += 1
+                player_stats[player]["net_score"] += set2_net
+                type_stats[match_type][player]["net_score"] += set2_net
             
             for player in team_b:
                 player_stats[player]["matches"].append({
@@ -210,6 +224,8 @@ def calculate_stats(json_path):
                 else:
                     player_stats[player]["losses"] += 1
                     type_stats[match_type][player]["losses"] += 1
+                player_stats[player]["net_score"] -= set2_net
+                type_stats[match_type][player]["net_score"] -= set2_net
     
     # 计算胜率并排名
     print("\n" + "=" * 60)
@@ -225,16 +241,17 @@ def calculate_stats(json_path):
             "wins": stats["wins"],
             "losses": stats["losses"],
             "total": total,
+            "net_score": stats["net_score"],
             "win_rate": win_rate
         })
     
-    # 按胜率降序，胜场数降序，总场次降序
-    rank_list.sort(key=lambda x: (-x["win_rate"], -x["wins"], -x["total"]))
+    # 按胜率降序，胜场数降序，净胜分降序，总场次降序
+    rank_list.sort(key=lambda x: (-x["win_rate"], -x["wins"], -x["net_score"], -x["total"]))
     
-    print(f"\n{'排名':<4}{'选手':<10}{'胜':<6}{'负':<6}{'总':<6}{'胜率':<10}")
-    print("-" * 42)
+    print(f"\n{'排名':<4}{'选手':<10}{'胜':<6}{'负':<6}{'总':<6}{'胜率':<8}{'净胜分':<8}")
+    print("-" * 48)
     for i, item in enumerate(rank_list, 1):
-        print(f"{i:<4}{item['name']:<10}{item['wins']:<6}{item['losses']:<6}{item['total']:<6}{item['win_rate']:.1%}")
+        print(f"{i:<4}{item['name']:<10}{item['wins']:<6}{item['losses']:<6}{item['total']:<6}{item['win_rate']:.1%}{item['net_score']:<+8}")
     
     # 按类型统计胜率（每个类型内按胜率排名选手）
     print("\n" + "=" * 60)
@@ -250,17 +267,18 @@ def calculate_stats(json_path):
                 "name": player,
                 "wins": stats["wins"],
                 "losses": stats["losses"],
+                "net_score": stats["net_score"],
                 "total": total,
                 "win_rate": win_rate
             })
         
-        type_rank.sort(key=lambda x: (-x["win_rate"], -x["wins"], -x["total"]))
+        type_rank.sort(key=lambda x: (-x["win_rate"], -x["wins"], -x["net_score"], -x["total"]))
         
         print(f"\n[{match_type}]")
-        print(f"{'排名':<4}{'选手':<10}{'胜':<6}{'负':<6}{'总':<6}{'胜率':<10}")
-        print("-" * 42)
+        print(f"{'排名':<4}{'选手':<10}{'胜':<6}{'负':<6}{'总':<6}{'胜率':<8}{'净胜分':<8}")
+        print("-" * 48)
         for i, item in enumerate(type_rank, 1):
-            print(f"{i:<4}{item['name']:<10}{item['wins']:<6}{item['losses']:<6}{item['total']:<6}{item['win_rate']:.1%}")
+            print(f"{i:<4}{item['name']:<10}{item['wins']:<6}{item['losses']:<6}{item['total']:<6}{item['win_rate']:.1%}{item['net_score']:<+8}")
     
     return rank_list, type_rank
 
