@@ -45,13 +45,13 @@ def select_attendees(people_list, seed):
     random.shuffle(result)
     return result
 
+new_wb = openpyxl.Workbook()
+default_sheet = new_wb.active
+new_wb.remove(default_sheet)
+
 for idx, target_date in enumerate(all_mondays):
     date_str = target_date.strftime('%Y-%m-%d')
-    filename = f"报名表_{date_str}.xlsx"
-
-    new_wb = openpyxl.Workbook()
-    ws = new_wb.active
-    ws.title = "Sheet1"
+    ws = new_wb.create_sheet(title=date_str)
 
     ws.merge_cells('A1:C1')
     title = ws['A1']
@@ -79,12 +79,9 @@ for idx, target_date in enumerate(all_mondays):
         ws.cell(row=row_idx, column=3, value=None).font = Font(name='宋体', size=14)
         ws.row_dimensions[row_idx].height = 32
 
-    ws['M27'] = "；。'"
-
     ws.column_dimensions['A'].width = 11.06
     ws.column_dimensions['B'].width = 58.85
     ws.column_dimensions['C'].width = 18.42
-    ws.column_dimensions['M'].width = 13.0
 
     last_data_row = 2 + len(attendees)
     for row_idx in range(2, last_data_row + 1):
@@ -93,7 +90,10 @@ for idx, target_date in enumerate(all_mondays):
             cell.border = thin_border
             cell.alignment = Alignment(horizontal='center', vertical='center')
 
-    new_wb.save(filename)
-    print(f"Saved: {filename}")
+    ws.print_area = f"A1:C{last_data_row}"
+
+filename = f"报名表_{start.strftime('%Y-%m-%d')}_{end.strftime('%Y-%m-%d')}.xlsx"
+new_wb.save(filename)
+print(f"\nSaved: {filename}")
 
 print("\nDone!")
