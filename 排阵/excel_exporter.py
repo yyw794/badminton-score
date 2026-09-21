@@ -12,29 +12,36 @@ import re
 
 
 # Player definitions (shared across modules)
+# 以 排阵/大模型排阵/大模型排序需求.md 的名单为准
 INTERNAL_MALE_PLAYERS = [
-    "苏大哲", "罗蒙", "江锐", "严勇文", "陈顺星", "陈小洪",
-    "卢志辉", "林锋", "王小波", "刘继宇", "董广博", "林琪琛", "罗琴荩"
+    "苏大哲", "严勇文", "陈顺星", "陈小洪", "卢志辉", "林锋",
+    "王小波", "刘继宇", "董广博", "林琪琛", "罗琴荩", "陈财贵",
+    "范智强", "王苏丹"
 ]
 
 GUEST_MALE_PLAYERS = [
-    "张欣欣", "黄冬青", "程建兴", "陈宇霆", "卢子龙", "吴煜"
+    "张欣欣", "黄冬青", "程建兴", "陈宇霆", "卢子龙", "吴煜",
+    "罗蒙", "江锐", "刘海锐"
 ]
 
 MALE_PLAYERS = INTERNAL_MALE_PLAYERS + GUEST_MALE_PLAYERS
 
 INTERNAL_FEMALE_PLAYERS = [
-    "田茜", "唐英武", "李祺祺", "高洁", "滕菲", "谢卓珊", "崔倩男", "林小连"
+    "唐英武", "李祺祺", "高洁", "滕菲", "谢卓珊", "崔倩男",
+    "林小连", "徐越", "李佳琳"
 ]
 
 GUEST_FEMALE_PLAYERS = [
-    "张燕红", "李杏芝", "项小英"
+    "张燕红", "李杏芝", "项小英", "田茜"
 ]
 
 FEMALE_PLAYERS = INTERNAL_FEMALE_PLAYERS + GUEST_FEMALE_PLAYERS
 
 # Mixed doubles eligible male players (internal only)
-MIXED_DOUBLES_MALES = {"林锋", "王小波", "陈顺星", "罗琴荩", "罗蒙"}
+MIXED_DOUBLES_MALES = {"林锋", "王小波", "陈顺星"}
+
+# 单打候选人员
+SINGLES_PLAYERS = ["董广博", "林琪琛", "罗琴荩", "卢志辉", "严勇文"]
 
 # Player-specific constraints
 # fixed_games: None = 自动根据场地紧张程度计算，整数 = 固定场次

@@ -1,0 +1,57 @@
+{
+  "date": "2026-09-14",
+  "title": "工会杯备战训练 2026-09-14",
+  "courts": [6, 8, 17, 18],
+  "rounds_count": 7,
+
+  "roster": {
+    "internal_male": ["苏大哲", "严勇文", "陈顺星", "陈小洪", "卢志辉", "林锋", "王小波", "刘继宇", "罗琴荩", "陈财贵", "范智强"],
+    "female": ["李祺祺", "李佳琳"],
+    "guest": ["程建兴", "罗蒙", "张欣欣"]
+  },
+
+  "roles": {
+    "anchors": [["苏大哲", "陈财贵"], ["陈顺星", "刘继宇"]],
+    "seeds": ["范智强", "罗琴荩"],
+    "xd_women": ["李祺祺", "李佳琳"],
+    "ms_opp_internal": ["严勇文", "陈小洪", "王小波"],
+    "xd_prefer": ["林锋", "王小波", "严勇文", "陈小洪", "程建兴", "罗蒙"]
+  },
+
+  "structure": {
+    "sc_rounds": [1, 2, 3, 4, 5, 6, 7],
+    "xl_rounds": [1, 2, 3, 5, 6, 7],
+    "duel_rounds": [1, 5],
+    "rounds": {
+      "1": {"xd": true, "ws": false, "om": false, "ms_seeds": ["范智强", "罗琴荩"]},
+      "2": {"xd": false, "ws": true, "om": false, "ms_seeds": ["范智强"]},
+      "3": {"xd": true, "ws": false, "om": false, "ms_seeds": ["罗琴荩"]},
+      "4": {"xd": true, "ws": false, "om": false, "ms_seeds": ["范智强", "罗琴荩"]},
+      "5": {"xd": true, "ws": false, "om": false, "ms_seeds": ["范智强", "罗琴荩"]},
+      "6": {"xd": false, "ws": true, "om": true, "ms_seeds": []},
+      "7": {"xd": true, "ws": false, "om": true, "ms_seeds": []}
+    }
+  },
+
+  "preferences": {
+    "ms_opp_order": {"程建兴": 0, "罗蒙": 1, "张欣欣": 2},
+    "xd_order": {"林锋": 0, "王小波": 1},
+    "ms_opp_cap": 2
+  },
+
+  "limits": {
+    "cap": 7,
+    "min_cap": 4,
+    "caps": {"internal": 7, "guest": 7}
+  },
+
+  "goals": {
+    "anchor_pair_min": [
+      {"pair": ["苏大哲", "陈财贵"], "min": 3},
+      {"pair": ["陈顺星", "刘继宇"], "min": 2}
+    ],
+    "xd_min": [{"player": "林锋", "min": 4}],
+    "ws_count": 2,
+    "seed_ms_min": 3
+  }
+}

@@ -19,7 +19,7 @@ from excel_exporter import (
 )
 
 # Mixed doubles eligible male players (internal only)
-MIXED_DOUBLES_MALES = {"林锋", "王小波", "陈顺星", "罗琴荩", "罗蒙"}
+MIXED_DOUBLES_MALES = {"林锋", "王小波", "陈顺星"}
 
 # Player-specific constraints
 # fixed_games: None = 自动根据场地紧张程度计算，整数 = 固定场次
@@ -552,10 +552,12 @@ def parse_signup(signup_text: str) -> Tuple[List[str], List[str]]:
 
 
 def get_court_count(total_players: int) -> int:
-    """Determine number of courts based on player count."""
+    """Determine number of courts based on player count (max 4 courts)."""
     if total_players <= 12:
         return 2
-    return 3
+    elif total_players <= 20:
+        return 3
+    return 4
 
 
 def main():

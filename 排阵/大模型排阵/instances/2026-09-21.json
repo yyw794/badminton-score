@@ -1,0 +1,73 @@
+{
+  "_note": "14 人均衡版（能量均衡=最高优先，用户明确）。3 场地 7 轮 = 21 场，能量 84，人均 6.0，全员能量落在 [5,7]、极差 2。结构（为均衡做的取舍）：女双vs混双只保留 1 场(R4)——3 女生里徐越/李祺祺有女单底仓 +4，女双vs混双每轮三女同时 +1 只会拉大差距；改用 4 场混双(R1/R3/R6/R7，李佳琳每场都上，徐越/李祺祺各半) 把李佳琳抬到位。女生能量：徐越 女单2(4)+女双vs混双1(1)+混双2(2)=7；李祺祺 同=7；李佳琳 女双vs混双1+混双4=5。固定单打：范/罗 男单 2(R1/R4，各+4)、徐/李 女单 2(R2/R5，各+4)。锚点：苏大哲+陈财贵 sc 全 7 轮（对手从强手池挑，林锋/罗蒙/范智强/罗琴荩/陈小洪/王小波）；严勇文 固定第二男双(xl，R1/R4休)，搭档 陈顺星/范智强/罗琴荩 轮换（严+陈顺≤2、严+罗琴≤2）。男生能量：苏7/财7/严5；非锚点8男 46 能量落 [5,7]（WORK_LOW=5/WORK_MAX=7/WORK_MIN=6）。",
+  "date": "2026-09-21",
+  "title": "工会杯备战训练 2026-09-21（3场地·14人均衡版）",
+  "courts": [6, 8, 17],
+  "rounds_count": 7,
+
+  "roster": {
+    "internal_male": ["苏大哲", "严勇文", "陈顺星", "陈小洪", "林锋", "王小波", "罗琴荩", "陈财贵", "范智强"],
+    "female": ["徐越", "李祺祺", "李佳琳"],
+    "guest": ["张欣欣", "罗蒙"]
+  },
+
+  "roles": {
+    "anchors": [["苏大哲", "陈财贵"]],
+    "seeds": [],
+    "ms_pair": ["范智强", "罗琴荩"],
+    "ws_pair": ["徐越", "李祺祺"],
+    "xl_anchor": "严勇文",
+    "xl_partner": ["陈顺星", "范智强", "罗琴荩"],
+    "sc_opp_pool": ["林锋", "罗蒙", "范智强", "罗琴荩", "陈小洪", "王小波"],
+    "wd_sides": {"女双": ["李佳琳", "徐越"], "混双": ["李祺祺"]},
+    "xd_women": ["徐越", "李佳琳"],
+    "ms_opp_internal": [],
+    "xd_prefer": ["林锋", "王小波", "陈小洪"]
+  },
+
+  "structure": {
+    "sc_rounds": [1, 2, 3, 4, 5, 6, 7],
+    "xl_rounds": [2, 3, 5, 6, 7],
+    "duel_rounds": [],
+    "reshuffle_rounds": [],
+    "reshuffle_teams": [],
+    "rounds": {
+      "1": {"ms": true, "ws": false, "xd": true, "xd_women": ["徐越", "李佳琳"], "wd_xd": false, "om": false},
+      "2": {"ms": false, "ws": true, "xd": false, "wd_xd": false, "om": false},
+      "3": {"ms": false, "ws": false, "xd": true, "xd_women": ["李祺祺", "李佳琳"], "wd_xd": false, "om": false},
+      "4": {"ms": true, "ws": false, "xd": false, "wd_xd": true, "wd_sides": {"女双": ["李佳琳", "徐越"], "混双": ["李祺祺"]}, "om": false},
+      "5": {"ms": false, "ws": true, "xd": false, "wd_xd": false, "om": false},
+      "6": {"ms": false, "ws": false, "xd": true, "xd_women": ["徐越", "李佳琳"], "wd_xd": false, "om": false},
+      "7": {"ms": false, "ws": false, "xd": true, "xd_women": ["李祺祺", "李佳琳"], "wd_xd": false, "om": false}
+    }
+  },
+
+  "preferences": {
+    "ms_opp_order": {},
+    "xd_order": {"林锋": 0, "王小波": 1, "陈小洪": 2},
+    "ms_opp_cap": 2
+  },
+
+  "limits": {
+    "cap": 7,
+    "min_cap": 3,
+    "caps": {"internal": 7, "guest": 7},
+    "spread_max": 2
+  },
+
+  "goals": {
+    "anchor_pair_min": [
+      {"pair": ["苏大哲", "陈财贵"], "min": 3}
+    ],
+    "xd_min": [],
+    "ws_count": 2,
+    "wd_xd_count": 1,
+    "seed_ms_min": 0
+  },
+
+  "pairs": [],
+  "max_pairs": [
+    {"pair": ["严勇文", "陈顺星"], "max": 2},
+    {"pair": ["严勇文", "罗琴荩"], "max": 2}
+  ]
+}

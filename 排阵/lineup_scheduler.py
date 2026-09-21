@@ -17,8 +17,8 @@ import re
 
 # Player definitions
 INTERNAL_MALE_PLAYERS = [
-    "苏大哲", "罗蒙", "江锐", "严勇文", "陈顺星", "陈小洪",
-    "卢志辉", "林锋", "王小波", "刘继宇", "董广博", "林琪琛", "罗琴荩"
+    "苏大哲", "严勇文", "陈顺星", "陈小洪", "卢志辉", "林锋",
+    "王小波", "刘继宇", "董广博", "林琪琛", "罗琴荩", "陈财贵"
 ]
 
 GUEST_MALE_PLAYERS = [
@@ -76,7 +76,10 @@ def parse_activity_date(signup_text: str) -> str:
     return ""  # No date found
 
 # Mixed doubles eligible male players (internal only)
-MIXED_DOUBLES_MALES = {"林锋", "王小波", "陈顺星", "罗琴荩", "罗蒙"}
+MIXED_DOUBLES_MALES = {"林锋", "王小波", "陈顺星"}
+
+# 单打候选人员
+SINGLES_PLAYERS = ["董广博", "林琪琛", "罗琴荩", "卢志辉", "严勇文"]
 
 # Player-specific constraints
 # fixed_games: None = 自动根据场地紧张程度计算，整数 = 固定场次
@@ -183,10 +186,12 @@ def parse_signup(signup_text: str) -> Tuple[List[str], List[str]]:
 
 
 def get_court_count(total_players: int) -> int:
-    """Determine number of courts based on player count."""
+    """Determine number of courts based on player count (max 4 courts)."""
     if total_players <= 12:
         return 2
-    return 3
+    elif total_players <= 20:
+        return 3
+    return 4
 
 
 def generate_mixed_doubles_matches(males: List[str], females: List[str]) -> List[Tuple[Tuple[str, str], Tuple[str, str]]]:
