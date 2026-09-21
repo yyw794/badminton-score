@@ -15,11 +15,14 @@ def correct_name(name):
     return CORRECTION.get(name, name)
 
 def parse_score(score_str):
-    """解析比分字符串，返回 (score_a, score_b) 元组"""
+    """解析比分字符串，返回 (score_a, score_b) 元组，X或无效值返回None"""
     if not score_str:
         return None, None
     parts = score_str.split(":")
-    return int(parts[0]), int(parts[1])
+    try:
+        return int(parts[0]), int(parts[1])
+    except ValueError:
+        return None, None
 
 def get_match_winner(match):
     """
@@ -110,8 +113,11 @@ def calculate_stats(json_path):
                 first_winner = team_b
                 first_loser = team_a
             
-            # 计算第1局净胜分
-            set1_net = score_a1 - score_b1  # 正值表示对阵A净胜，负值表示对阵B净胜
+            # 计算第1局净胜分（仅当比分有效时）
+            if score_a1 is not None and score_b1 is not None:
+                set1_net = score_a1 - score_b1  # 正值表示对阵A净胜，负值表示对阵B净胜
+            else:
+                set1_net = None
             
             for player in team_a:
                 player_stats[player]["matches"].append({
@@ -135,9 +141,10 @@ def calculate_stats(json_path):
                 else:
                     player_stats[player]["losses"] += 1
                     type_stats[match_type][player]["losses"] += 1
-                # 净胜分：对阵A方获得 set1_net
-                player_stats[player]["net_score"] += set1_net
-                type_stats[match_type][player]["net_score"] += set1_net
+                # 净胜分：对阵A方获得 set1_net（仅当比分有效时）
+                if set1_net is not None:
+                    player_stats[player]["net_score"] += set1_net
+                    type_stats[match_type][player]["net_score"] += set1_net
             
             for player in team_b:
                 player_stats[player]["matches"].append({
@@ -161,9 +168,10 @@ def calculate_stats(json_path):
                 else:
                     player_stats[player]["losses"] += 1
                     type_stats[match_type][player]["losses"] += 1
-                # 净胜分：对阵B方获得 -set1_net
-                player_stats[player]["net_score"] -= set1_net
-                type_stats[match_type][player]["net_score"] -= set1_net
+                # 净胜分：对阵B方获得 -set1_net（仅当比分有效时）
+                if set1_net is not None:
+                    player_stats[player]["net_score"] -= set1_net
+                    type_stats[match_type][player]["net_score"] -= set1_net
         
         # 第2局统计
         if score_a2 is not None and score_b2 is not None:
@@ -174,8 +182,11 @@ def calculate_stats(json_path):
                 second_winner = team_b
                 second_loser = team_a
             
-            # 计算第2局净胜分
-            set2_net = score_a2 - score_b2
+            # 计算第2局净胜分（仅当比分有效时）
+            if score_a2 is not None and score_b2 is not None:
+                set2_net = score_a2 - score_b2
+            else:
+                set2_net = None
             
             for player in team_a:
                 player_stats[player]["matches"].append({
@@ -199,8 +210,9 @@ def calculate_stats(json_path):
                 else:
                     player_stats[player]["losses"] += 1
                     type_stats[match_type][player]["losses"] += 1
-                player_stats[player]["net_score"] += set2_net
-                type_stats[match_type][player]["net_score"] += set2_net
+                if set2_net is not None:
+                    player_stats[player]["net_score"] += set2_net
+                    type_stats[match_type][player]["net_score"] += set2_net
             
             for player in team_b:
                 player_stats[player]["matches"].append({
@@ -224,8 +236,9 @@ def calculate_stats(json_path):
                 else:
                     player_stats[player]["losses"] += 1
                     type_stats[match_type][player]["losses"] += 1
-                player_stats[player]["net_score"] -= set2_net
-                type_stats[match_type][player]["net_score"] -= set2_net
+                if set2_net is not None:
+                    player_stats[player]["net_score"] -= set2_net
+                    type_stats[match_type][player]["net_score"] -= set2_net
     
     # 计算胜率并排名
     print("\n" + "=" * 60)
