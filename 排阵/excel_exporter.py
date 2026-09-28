@@ -32,7 +32,7 @@ INTERNAL_FEMALE_PLAYERS = [
 ]
 
 GUEST_FEMALE_PLAYERS = [
-    "张燕红", "李杏芝", "项小英", "田茜"
+    "张燕红", "李杏芝", "项小英", "田茜", "曹杨"
 ]
 
 FEMALE_PLAYERS = INTERNAL_FEMALE_PLAYERS + GUEST_FEMALE_PLAYERS

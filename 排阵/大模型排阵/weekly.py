@@ -38,6 +38,7 @@ class Week:
     # 名单（接龙数据）
     internal_male: list
     female: list
+    guest_female: list
     guest: list
     # 角色指派（策略层）
     anchors: list                 # [[p1, p2], ...]
@@ -74,11 +75,14 @@ class Week:
     mins: dict = field(default_factory=dict)
     # 同队上限（换搭档，如 陈小洪/卢志辉 同队≤2）：[[[p1,p2],max], ...]
     max_pairs: list = field(default_factory=list)
+    # 能量低端优先给这些人（他们的能量硬上限=5；其余非锚点=6，结构里低端落给他们）
+    favor_low: list = field(default_factory=list)
 
     # ---- 派生量（每周随名单自动重算，不用手填）----
     @property
     def foreign(self):
-        return set(self.guest)
+        """外援 = 外援男 + 外援女（都算外援，无外援PK外援规则全体适用）。"""
+        return set(self.guest) | set(self.guest_female)
 
     @property
     def all_anchors(self):
@@ -132,6 +136,7 @@ def _from_dict(d):
         rounds_count=int(d["rounds_count"]),
         internal_male=list(roster["internal_male"]),
         female=list(roster["female"]),
+        guest_female=list(roster.get("guest_female", [])),
         guest=list(roster["guest"]),
         anchors=[list(p) for p in roles["anchors"]],
         seeds=list(roles["seeds"]),
@@ -161,6 +166,7 @@ def _from_dict(d):
         pairs=list(d.get("pairs", [])),
         mins=dict(lim.get("mins", {})),
         max_pairs=list(d.get("max_pairs", [])),
+        favor_low=list(pref.get("favor_low", [])),
     )
 
 
@@ -235,8 +241,9 @@ DEFAULT = {
 if __name__ == "__main__":
     w = load()
     print(f"周实例: {w.date}（{w.title}）")
-    print(f"  名单: 内部男{len(w.internal_male)} 女{len(w.female)} 外援{len(w.guest)} = "
-          f"{len(w.internal_male) + len(w.female) + len(w.guest)} 人")
+    print(f"  名单: 内部男{len(w.internal_male)} 女{len(w.female)} 外援男{len(w.guest)} "
+          f"外援女{len(w.guest_female)} = "
+          f"{len(w.internal_male) + len(w.female) + len(w.guest) + len(w.guest_female)} 人")
     print(f"  锚点: {w.anchor_pairs}")
     if w.pairs:
         print(f"  合练对: {[(list(p['pair']), p['min']) for p in w.pairs]}")

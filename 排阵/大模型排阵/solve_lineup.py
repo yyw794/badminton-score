@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """
-排阵求解器（2026-09-21）—— 3 场地 15 人版
+排阵求解器（2026-09-28）—— 3 场地 16 人版（含 2 外援女）
 场地约束：3 个场地 × 7 轮 = 21 场；总能量 = 84（单打×2 + 双打×1）。
-结构（每人确定，来自 instances/2026-09-21.json）：
-  男单 2（范智强 vs 罗琴荩，R1/R4）；女单 2（徐越 vs 李祺祺，R2/R5）；
-  女双vs混双 3（R3/R4/R6，李佳琳固定女双侧，3 女全上另配 1 男）；
-  混双 1（R1，徐越+李佳琳）；开放男双 1（R7）；锚点男双 sc(7)/xl(5)。
-锚点：苏大哲/陈财贵（sc，全 7 轮，"最强针对打"），陈顺星/严勇文（xl，R1/R4 休）。
+结构（每人确定，来自 instances/2026-09-28.json）：
+  男单 1（范智强 vs 王苏丹，R2）；女单 1（李祺祺 vs 项小英，R4）；
+  纯女双 3（R5/R6/R7，徐越+李佳琳 vs 项小英+曹杨，双侧固定不进搜索）；
+  混双 5（R1/R2/R3/R5/R7）；锚点男双 sc(6)/xl(5)。
+锚点：苏大哲/陈财贵（sc，R1-R6，"最强针对打"，R7 休），刘继宇（xl，R2/R5 休，
+  搭档 陈顺星/严勇文 轮换，各≤3）。
 硬约束：
   1. 锚点对锁死：凡打男双必须同队（不拆）。
   2. 无外援PK外援：每场至多 1 队含外援；男双组队优先 内部+内部 / 外援+外援。
-  3. 每人 caps（8）+ mins（非锚点≥3）；女生能量由轮次模板锁死。
-  4. 能量极差 ≤ spread_max（2026-09-21 结构为 4；女生/单打结构性偏低端）。
+  3. 混双女含外援女（曹杨，R1/R2）时，外援男（罗蒙）禁入混双。
+  4. 每人 caps（6）+ mins（软下限）；女生能量由轮次模板锁死。
+  5. 能量极差 ≤ spread_max（2026-09-28 结构为 2；全局 [4,6]）。
 方法：回溯搜索 + 多随机重启，取 BT 强度 + 能量均衡 最优的可行解。
 输出：与本目录 lineup JSON 同结构，可直接交给 export_lineup.py。
 """
@@ -80,10 +82,14 @@ XD_KEY_PLAYER = _XD_MIN0.get("player")
 XD_KEY_MIN = int(_XD_MIN0.get("min", 0))
 
 # ---- 算法参数（通用、稳定）----
-# 2026-09-21：14 人 84 能量，人均 6.0；目标全员落 [5,7]（极差 2，与需求文档"能量均衡最高优先"一致）。
-# 结构定死者：苏/财 sc=7、严勇文 xl=5、女生 徐/李=7 佳琳=5；非锚点 8 男 46 能量落 [5,7]。
-WORK_MIN, WORK_MAX = 6, 7   # WORK_MAX=7 硬上限；WORK_MIN=6 软下限（排序/方差往均值拉）
+# 2026-09-28：16 人 84 能量，人均 5.25；目标非锚点落 [5,6]（硬上限 6，见下）。
+# 结构定死者：苏/财 sc=6、刘继宇 xl=5；女生 4-5（项5/曹5/滕4/徐4/李佳4/李祺4）。
+# 非锚点 7 男（含范/王单打底仓 +2）共 41 能量 → 6 人 =6、1 人 =5，全局 [4,6] 极差 2。
+WORK_MIN, WORK_MAX = 6, 6   # WORK_MAX=6 硬上限（极差结构下限）；WORK_MIN=6 软下限（排序/方差往均值拉）
 WORK_LOW = 5                # 硬下限（能量）：非锚点 ≥5
+FAVOR_LOW = set(WEEK.favor_low)  # 能量低端优先：这些非锚点能量硬上限 5（结构里低端给弱者，其余 6）
+def work_max_of(p):
+    return 5 if p in FAVOR_LOW else WORK_MAX
 OM_MAX_COMBOS = 24
 WORK_BAL_W = 2.0             # 能量均衡权重（用户最关心，压过强度项1.0 成绝对主导）
 WORK_FLOOR_W = 8.0           # 低于下限 WORK_MIN 的平方惩罚权重
@@ -136,6 +142,12 @@ def build(sc_rounds, xl_rounds, assign, theta, duel_rounds=frozenset()):
             ordered.append(("女双vs混双",
                             list(sides.get("女双", [])),
                             [man] + list(sides.get("混双", []))))
+        if spec.get("wd"):
+            # 纯女双：双侧固定 2 女（构造性，不进搜索）
+            sides = spec.get("wd_sides") or WD_SIDES
+            ordered.append(("女双",
+                            list(sides.get("女双", [])),
+                            list(sides.get("女双对", []))))
         if spec.get("xd"):
             xw = spec.get("xd_women") or (W_XD0, W_XD1)
             xda, xdb = xd_assign(A["xd"], xw[0], xw[1], theta)
@@ -430,7 +442,7 @@ def solve(sc_rounds, xl_rounds, theta, rng, node_cap=60000,
         if r == NR + 1:
             if lf_xd[0] != XD_KEY_MIN:
                 return False
-            if any(work[p] > WORK_MAX or work[p] < WORK_LOW for p in NON_ANCHOR):
+            if any(work[p] > work_max_of(p) or work[p] < WORK_LOW for p in NON_ANCHOR):
                 return False
             if not all(pair_cnt[pr] >= PAIR_MIN[pr] for pr in PAIR_KEYS):
                 return False
@@ -457,30 +469,36 @@ def solve(sc_rounds, xl_rounds, theta, rng, node_cap=60000,
                 return False
             cands = [p for p in pool if p not in taken and p != seed]
             if name == "xlp":
-                # 严勇文 搭档：限候选池（陈顺星/范智强/罗琴荩），能量欠账者优先
-                cands = [p for p in cands if p in XL_PARTNER and work[p] + 1 <= WORK_MAX]
+                # 第二男双搭档：限候选池（陈顺星/严勇文），能量欠账者优先
+                cands = [p for p in cands if p in XL_PARTNER and work[p] + 1 <= work_max_of(p)]
                 cands = sorted(cands, key=lambda p: (work[p] >= WORK_MIN, work[p],
                                                      0 if p in XD_PREFER else 1,
                                                      XD_ORDER.get(p, 9)))
             elif name == "wd_xd":
-                cands = [p for p in cands if work[p] + 1 <= WORK_MAX]
+                cands = [p for p in cands if work[p] + 1 <= work_max_of(p)]
                 cands = sorted(cands, key=lambda p: (wd_cnt[p],
                                                      work[p] >= WORK_MIN, work[p],
                                                      0 if p in XD_PREFER else 1,
                                                      XD_ORDER.get(p, 9)))
             elif name == "xd":
+                # 该轮混双女含外援女（如曹杨）时，外援男（罗蒙）禁入混双：
+                # 双女必然分列两侧，外援男+外援女 必成 外援PK外援（export 硬校验拒写）
+                xw_now = spec.get("xd_women") or (W_XD0, W_XD1)
+                if any(w in FOREIGN for w in xw_now):
+                    cands = [p for p in cands if p not in FOREIGN]
+                cands = [p for p in cands if work[p] + 1 <= work_max_of(p)]
                 cands = sorted(cands, key=lambda p: (work[p] >= WORK_MIN, work[p],
                                                      0 if p in XD_PREFER else 1,
                                                      XD_ORDER.get(p, 9)))
             elif name == "sc":
                 # 苏陈对手：硬候选池(排除最弱)；池内洗牌探索不同强组合(多样性)，
                 # 由 强度奖励+重复惩罚 在多重启里选出最优
-                cands = [p for p in cands if work[p] + 1 <= WORK_MAX
+                cands = [p for p in cands if work[p] + 1 <= work_max_of(p)
                          and (SC_OPP_POOL is None or p in SC_OPP_POOL)]
                 cands = sorted(cands, key=lambda p: -theta[p])
                 rng.shuffle(cands)
             else:
-                cands = [p for p in cands if work[p] + 1 <= WORK_MAX]
+                cands = [p for p in cands if work[p] + 1 <= work_max_of(p)]
                 cands = sorted(cands, key=lambda p: (work[p] >= WORK_MIN,
                                                      work[p], -theta[p]))
             if len(cands) < size:
@@ -665,6 +683,8 @@ def main():
         r for r, s in ROUNDS.items() if s.get("ws")))
     wdxd_rounds = "/".join("R" + str(r) for r in sorted(
         r for r, s in ROUNDS.items() if s.get("wd_xd")))
+    wd_rounds = "/".join("R" + str(r) for r in sorted(
+        r for r, s in ROUNDS.items() if s.get("wd")))
     xd_rounds = "/".join("R" + str(r) for r in sorted(
         r for r, s in ROUNDS.items() if s.get("xd")))
     om_rounds = "/".join("R" + str(r) for r in sorted(OM_ROUNDS))
@@ -676,10 +696,19 @@ def main():
         anchor_desc.append(f"{'/'.join(pair)} 男双锁死{suffix}")
     xl_rest = sorted(set(range(1, NR + 1)) - set(xl_rounds))
     xl_desc = (f"{XL_ANCHOR} 固定 + 搭档轮换({'/'.join(XL_PARTNER)}；"
-               f"严勇文+陈顺星≤2)（{'/'.join('R' + str(r) for r in xl_rounds)}"
+               f"{'；'.join('/'.join(sorted(pr)) + '≤' + str(mx) for pr, mx in MAX_PAIRS)})"
+               f"（{'/'.join('R' + str(r) for r in xl_rounds)}"
                f"{'，' + '/'.join('R' + str(r) + '休' for r in xl_rest) if xl_rest else ''}）")
-    wd_desc = (f"女双({'/'.join(WD_SIDES.get('女双', []))}) vs "
-               f"混双(男+{'/'.join(WD_SIDES.get('混双', []))})")
+    wd_notes = []
+    if wdxd_rounds:
+        wd_desc = (f"女双({'/'.join(WD_SIDES.get('女双', []))}) vs "
+                   f"混双(男+{'/'.join(WD_SIDES.get('混双', []))})")
+        wd_notes.append(f"女双vs混双 {wdxd_rounds} {wd_desc}（李佳琳固定女双侧补位，3女全上另配1男）")
+    if wd_rounds:
+        wda = WD_SIDES.get("女双", [])
+        wdb = WD_SIDES.get("女双对", [])
+        wd_notes.append(f"纯女双 {wd_rounds}：{'/'.join(wda)} vs {'/'.join(wdb)}"
+                        f"（女双试搭，双侧固定 {len(wd_rounds.split('/'))} 场）")
     lineup = {
         "title": WEEK.title,
         "date": WEEK.date,
@@ -693,7 +722,7 @@ def main():
             "第二男双": xl_desc,
             "男单": f"{'/'.join(MS_PAIR)} 固定对战（{ms_rounds}，各2场）",
             "女单": f"{'/'.join(WS_PAIR)} 固定对战（{ws_rounds}，各2场）",
-            "女双vs混双": f"{wdxd_rounds} {wd_desc}（李佳琳固定女双侧补位，3女全上另配1男）",
+            **({"女双": "；".join(wd_notes)} if wd_notes else {}),
             "混双": (f"{xd_rounds} 各1场；" +
                      "；".join(f"R{r}:{'/'.join(ROUNDS[r].get('xd_women') or (W_XD0, W_XD1))}"
                                for r in sorted(r for r, s in ROUNDS.items() if s.get('xd')))),
