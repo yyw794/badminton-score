@@ -77,6 +77,10 @@ class Week:
     max_pairs: list = field(default_factory=list)
     # 能量低端优先给这些人（他们的能量硬上限=5；其余非锚点=6，结构里低端落给他们）
     favor_low: list = field(default_factory=list)
+    # 男双(含 sc/xl/xlp/om)场上限：{player: max}，让爱打混双的人少打男双（如 王小波）
+    md_max: dict = field(default_factory=dict)
+    # {轮次: [强制打混双的男]}，如 {3:["王苏丹"]}（该轮混双固定男，θ 均衡自动配对）
+    xd_incl: dict = field(default_factory=dict)
 
     # ---- 派生量（每周随名单自动重算，不用手填）----
     @property
@@ -154,6 +158,7 @@ def _from_dict(d):
         duel_rounds=list(st["duel_rounds"]),
         reshuffle_rounds=list(st.get("reshuffle_rounds", [])),
         reshuffle_teams=[list(t) for t in st.get("reshuffle_teams", [])],
+        xd_incl={int(k): list(v) for k, v in st.get("xd_incl", {}).items()},
         rounds={int(k): dict(v) for k, v in st["rounds"].items()},
         ms_opp_order=dict(pref["ms_opp_order"]),
         xd_order=dict(pref["xd_order"]),
@@ -167,6 +172,7 @@ def _from_dict(d):
         mins=dict(lim.get("mins", {})),
         max_pairs=list(d.get("max_pairs", [])),
         favor_low=list(pref.get("favor_low", [])),
+        md_max={str(k): int(v) for k, v in pref.get("md_max", {}).items()},
     )
 
 

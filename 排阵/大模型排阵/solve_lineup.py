@@ -3,7 +3,7 @@
 排阵求解器（2026-09-28）—— 3 场地 16 人版（含 2 外援女）
 场地约束：3 个场地 × 7 轮 = 21 场；总能量 = 84（单打×2 + 双打×1）。
 结构（每人确定，来自 instances/2026-09-28.json）：
-  男单 1（范智强 vs 王苏丹，R2）；女单 1（李祺祺 vs 项小英，R4）；
+  男单 1（范智强 vs 罗蒙，R2）；女单 1（李祺祺 vs 项小英，R4）；
   纯女双 3（R5/R6/R7，徐越+李佳琳 vs 项小英+曹杨，双侧固定不进搜索）；
   混双 5（R1/R2/R3/R5/R7）；锚点男双 sc(6)/xl(5)。
 锚点：苏大哲/陈财贵（sc，R1-R6，"最强针对打"，R7 休），刘继宇（xl，R2/R5 休，
@@ -40,7 +40,7 @@ SC = tuple(WEEK.anchor_pairs[0]) if len(WEEK.anchor_pairs) >= 1 else None   # �
 SC_OPP_POOL = set(WEEK.sc_opp_pool) if WEEK.sc_opp_pool else None   # 苏陈对手硬候选池
 XL_ANCHOR = WEEK.xl_anchor          # 第二男双固定成员（严勇文）
 XL_PARTNER = tuple(WEEK.xl_partner or [])   # 第二男双搭档候选池
-MS_PAIR = tuple(WEEK.ms_pair)              # 男单固定对战（范智强/罗琴荩）
+MS_PAIR = tuple(WEEK.ms_pair)              # 男单固定对战（范智强/罗蒙）
 WS_PAIR = tuple(WEEK.ws_pair)              # 女单固定对战（徐越/李祺祺）
 WD_SIDES = WEEK.wd_sides                   # 女双vs混双 女方分配 {"女双":[..],"混双":[..]}
 SEEDS = tuple(WEEK.seeds)                  # 单打种子（本周为空）
@@ -87,9 +87,11 @@ XD_KEY_MIN = int(_XD_MIN0.get("min", 0))
 # 非锚点 7 男（含范/王单打底仓 +2）共 41 能量 → 6 人 =6、1 人 =5，全局 [4,6] 极差 2。
 WORK_MIN, WORK_MAX = 6, 6   # WORK_MAX=6 硬上限（极差结构下限）；WORK_MIN=6 软下限（排序/方差往均值拉）
 WORK_LOW = 5                # 硬下限（能量）：非锚点 ≥5
-FAVOR_LOW = set(WEEK.favor_low)  # 能量低端优先：这些非锚点能量硬上限 5（结构里低端给弱者，其余 6）
+FAVOR_LOW = set(WEEK.favor_low)  # 能量低端优先：这些非锚点能量硬上限 5（结构里低端给弱者/外援，其余 6）
 def work_max_of(p):
     return 5 if p in FAVOR_LOW else WORK_MAX
+XD_INCL = {int(r): list(ps) for r, ps in WEEK.xd_incl.items()}  # 该轮强制打混双的男（如 R3 王苏丹）
+MD_MAX = dict(WEEK.md_max)                                      # 男双(含sc/xl/xlp)上限：尽量混双的人少打男双
 OM_MAX_COMBOS = 24
 WORK_BAL_W = 2.0             # 能量均衡权重（用户最关心，压过强度项1.0 成绝对主导）
 WORK_FLOOR_W = 8.0           # 低于下限 WORK_MIN 的平方惩罚权重
@@ -231,6 +233,21 @@ def repair_balance(assign, theta, sc_rounds, xl_rounds, duel_rounds, max_iters=6
         var = sum((v - avg) ** 2 for v in vals)
         return max(vals) - min(vals), max(vals), var, dict(w)
 
+    def md_count_of(p):
+        # 该球员当前男双(sc/xl/xlp/om)总场次，用于 MD_MAX 硬上限校验
+        n = 0
+        for r in range(1, NR + 1):
+            A = assign[r]
+            if p in A.get("sc_opp", []):
+                n += 1
+            if p in A.get("xl_opp", []):
+                n += 1
+            if p in (A.get("xlp") or []):
+                n += 1
+            if p in A.get("om", []):
+                n += 1
+        return n
+
     improved = False
     for _ in range(max_iters):
         cur_spread, cur_max, cur_var, w = spread_of()
@@ -266,6 +283,9 @@ def repair_balance(assign, theta, sc_rounds, xl_rounds, duel_rounds, max_iters=6
                             continue
                         # 苏陈对手：swap 也须留在强手池（修复把强对手换成弱手的问题）
                         if role == "sc" and SC_OPP_POOL is not None and L not in SC_OPP_POOL:
+                            continue
+                        # 男双硬上限：尽量混双的人（如 王小波）别被修进男双超上限
+                        if role in ("sc", "xl", "om") and md_count_of(L) >= MD_MAX.get(L, 999):
                             continue
                         new_g = [L if p == H else p for p in g]
                         if sum(1 for p in new_g if p in FOREIGN) > ROLE_FOREIGN_CAP[role]:
@@ -393,6 +413,7 @@ def solve(sc_rounds, xl_rounds, theta, rng, node_cap=60000,
     work = {p: ms_count.get(p, 0) * 2 for p in NON_ANCHOR}
     lf_xd = [0]
     wd_cnt = defaultdict(int)   # 各男已当过女双vs混双的"混双男"次数（软：轮换，别老同一人）
+    md_cnt = defaultdict(int)   # 各男已打男双(sc/xl/xlp/om)次数（硬上限 MD_MAX：爱混双者少打男双）
     sc_pairs_cnt = defaultdict(int)   # 苏陈对手组合次数（硬上限 SC_OPP_MAX_REPEAT）
     pair_cnt = {pr: 0 for pr in PAIR_KEYS}
     max_pair_cnt = {pr: 0 for pr in MAX_PAIR_KEYS}
@@ -468,9 +489,13 @@ def solve(sc_rounds, xl_rounds, theta, rng, node_cap=60000,
             if not prune(idx, taken):
                 return False
             cands = [p for p in pool if p not in taken and p != seed]
+            # 该轮混双固定男（如 R3 王苏丹）：从其它角色(男双等)候选里预留，只留给混双
+            if name != "xd" and r in XD_INCL:
+                cands = [p for p in cands if p not in XD_INCL[r]]
             if name == "xlp":
                 # 第二男双搭档：限候选池（陈顺星/严勇文），能量欠账者优先
-                cands = [p for p in cands if p in XL_PARTNER and work[p] + 1 <= work_max_of(p)]
+                cands = [p for p in cands if p in XL_PARTNER and work[p] + 1 <= work_max_of(p)
+                         and md_cnt[p] < MD_MAX.get(p, 999)]
                 cands = sorted(cands, key=lambda p: (work[p] >= WORK_MIN, work[p],
                                                      0 if p in XD_PREFER else 1,
                                                      XD_ORDER.get(p, 9)))
@@ -494,11 +519,13 @@ def solve(sc_rounds, xl_rounds, theta, rng, node_cap=60000,
                 # 苏陈对手：硬候选池(排除最弱)；池内洗牌探索不同强组合(多样性)，
                 # 由 强度奖励+重复惩罚 在多重启里选出最优
                 cands = [p for p in cands if work[p] + 1 <= work_max_of(p)
-                         and (SC_OPP_POOL is None or p in SC_OPP_POOL)]
+                         and (SC_OPP_POOL is None or p in SC_OPP_POOL)
+                         and md_cnt[p] < MD_MAX.get(p, 999)]
                 cands = sorted(cands, key=lambda p: -theta[p])
                 rng.shuffle(cands)
             else:
-                cands = [p for p in cands if work[p] + 1 <= work_max_of(p)]
+                cands = [p for p in cands if work[p] + 1 <= work_max_of(p)
+                         and md_cnt[p] < MD_MAX.get(p, 999)]
                 cands = sorted(cands, key=lambda p: (work[p] >= WORK_MIN,
                                                      work[p], -theta[p]))
             if len(cands) < size:
@@ -528,6 +555,13 @@ def solve(sc_rounds, xl_rounds, theta, rng, node_cap=60000,
                 groups.sort(key=grp_key)
                 if name == "om":
                     groups = groups[:OM_MAX_COMBOS]
+            # 该轮混双强制固定男（如 R3 王苏丹，配徐越）：组合必须包含他
+            if name == "xd" and r in XD_INCL:
+                need_fixed = [fp for fp in XD_INCL[r] if fp not in taken]
+                if any(fp not in cands for fp in need_fixed):
+                    return False
+                if need_fixed:
+                    groups = [g for g in groups if set(need_fixed) <= set(g)]
             for grp in groups:
                 if name == "xd":
                     add = 1 if XD_KEY_PLAYER in grp else 0
@@ -573,6 +607,9 @@ def solve(sc_rounds, xl_rounds, theta, rng, node_cap=60000,
                     wd_cnt[grp[0]] += 1
                 if name == "xd":
                     lf_xd[0] += 1 if XD_KEY_PLAYER in grp else 0
+                if name in ("sc", "xl", "xlp", "om"):
+                    for p in grp:
+                        md_cnt[p] += 1
                 if pair_hit:
                     pair_cnt[pair_hit] += 1
                 if sc_pair_key is not None:
@@ -585,6 +622,9 @@ def solve(sc_rounds, xl_rounds, theta, rng, node_cap=60000,
                     wd_cnt[grp[0]] -= 1
                 if name == "xd":
                     lf_xd[0] -= 1 if XD_KEY_PLAYER in grp else 0
+                if name in ("sc", "xl", "xlp", "om"):
+                    for p in grp:
+                        md_cnt[p] -= 1
                 if pair_hit:
                     pair_cnt[pair_hit] -= 1
                 if sc_pair_key is not None:
