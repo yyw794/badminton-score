@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
-排阵求解器（2026-09-28）—— 3 场地 16 人版（含 2 外援女）
+排阵求解器（2026-09-28）—— 3 场地 16 人版（含 2 外援女，能量极差 1）
 场地约束：3 个场地 × 7 轮 = 21 场；总能量 = 84（单打×2 + 双打×1）。
 结构（每人确定，来自 instances/2026-09-28.json）：
   男单 1（范智强 vs 罗蒙，R2）；女单 1（李祺祺 vs 项小英，R4）；
   纯女双 3（R5/R6/R7，徐越+李佳琳 vs 项小英+曹杨，双侧固定不进搜索）；
-  混双 5（R1/R2/R3/R5/R7）；锚点男双 sc(6)/xl(5)。
-锚点：苏大哲/陈财贵（sc，R1-R6，"最强针对打"，R7 休），刘继宇（xl，R2/R5 休，
-  搭档 陈顺星/严勇文 轮换，各≤3）。
+  混双 7（R1-R7 每轮 1 场，女位 14 → 女生全 5）；锚点男双 sc(5)/xl(4)。
+锚点：苏大哲/陈财贵（sc，R1-R5，各5 能量，R6/R7 休），刘继宇（xl，R1/R3/R6/R7，
+  打 2 场混双补到 6，搭档 陈顺星/严勇文 轮换，各≤3）。
+全局能量 [5,6]（极差 1）：男生 4 人 6（范/刘/严/王苏丹）+ 6 人 5；女生全 5。
 硬约束：
   1. 锚点对锁死：凡打男双必须同队（不拆）。
   2. 无外援PK外援：每场至多 1 队含外援；男双组队优先 内部+内部 / 外援+外援。
   3. 混双女含外援女（曹杨，R1/R2）时，外援男（罗蒙）禁入混双。
   4. 每人 caps（6）+ mins（软下限）；女生能量由轮次模板锁死。
-  5. 能量极差 ≤ spread_max（2026-09-28 结构为 2；全局 [4,6]）。
+  5. 能量极差 ≤ spread_max（2026-09-28 结构为 1；全局 [5,6]）。
 方法：回溯搜索 + 多随机重启，取 BT 强度 + 能量均衡 最优的可行解。
 输出：与本目录 lineup JSON 同结构，可直接交给 export_lineup.py。
 """
@@ -51,8 +52,9 @@ XD_PREFER = set(WEEK.xd_prefer)
 MS_OPP_ORDER = WEEK.ms_opp_order
 XD_ORDER = WEEK.xd_order
 MS_OPP_CAP = WEEK.ms_opp_cap
-# 非锚点池 = 非锚点内部男 + 外援；严勇文 专任第二男双(不占自由池，避免和他抢槽)
-NON_ANCHOR = [p for p in WEEK.non_anchor if p != XL_ANCHOR]
+# 非锚点池 = 非锚点内部男 + 外援；刘继宇(xl锚点)也入池但限打混双补能量（xl 轮固定占位，
+# 由工作底仓 + fixed_occ 排除 xl 轮后仅剩混双可选）；严勇文 专任第二男双(不占自由池，避免和他抢槽)
+NON_ANCHOR = list(WEEK.non_anchor)
 FOREIGN = WEEK.foreign
 W_XD0 = WEEK.xd_women[0]                   # 混双女1（徐越）
 W_XD1 = WEEK.xd_women[1]                   # 混双女2（李佳琳）
@@ -374,12 +376,14 @@ ROLE_KEY = {"sc": "sc_opp", "xl": "xl_opp", "xlp": "xlp",
 
 def solve(sc_rounds, xl_rounds, theta, rng, node_cap=60000,
           duel_rounds=frozenset()):
-    # 固定占位：男单轮 范/罗 该轮不进池子（固定对战）
+    # 固定占位：男单轮 范/罗 该轮不进池子（固定对战）；xl 轮 刘继宇 固定（他另计工作底仓，只留混双）
     fixed_occ = {}
     for r in range(1, NR + 1):
         occ = set()
         if ROUNDS[r].get("ms"):
             occ |= set(MS_PAIR)
+        if r in xl_rounds:
+            occ.add(XL_ANCHOR)
         fixed_occ[r] = occ
 
     roles, need = {}, {}
@@ -403,14 +407,18 @@ def solve(sc_rounds, xl_rounds, theta, rng, node_cap=60000,
         roles[r] = rs
         need[r] = sum(sz for _, sz, _ in rs)
 
-    # 男单固定对战先计场/能量（范/罗 +4 底仓）
+    # 男单固定对战先计场/能量（范/罗 +4 底仓）；xl 锚点刘继宇 计 xl 轮底仓（只差混双补到目标）
     ms_count = defaultdict(int)
     for r in range(1, NR + 1):
         if ROUNDS[r].get("ms"):
             for p in MS_PAIR:
                 ms_count[p] += 1
+        if r in xl_rounds:
+            ms_count[XL_ANCHOR] += 1
     used = {p: ms_count.get(p, 0) for p in NON_ANCHOR}
-    work = {p: ms_count.get(p, 0) * 2 for p in NON_ANCHOR}
+    work = {p: ms_count.get(p, 0) for p in NON_ANCHOR}
+    for p in MS_PAIR:
+        work[p] = ms_count.get(p, 0) * 2   # 男单 2 能量/场
     lf_xd = [0]
     wd_cnt = defaultdict(int)   # 各男已当过女双vs混双的"混双男"次数（软：轮换，别老同一人）
     md_cnt = defaultdict(int)   # 各男已打男双(sc/xl/xlp/om)次数（硬上限 MD_MAX：爱混双者少打男双）
