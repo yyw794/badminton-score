@@ -53,6 +53,7 @@ MS_OPP_FOREIGN = WEEK.ms_opp_foreign
 MS_OPP_INTERNAL = set(WEEK.ms_opp_internal)
 MS_OPP_POOL = WEEK.ms_opp_pool
 XD_PREFER = set(WEEK.xd_prefer)
+PARTNER_SPREAD = set(WEEK.partner_spread)   # 搭档分散：男双搭档尽量轮换不重复（如 陈小洪）
 MS_OPP_ORDER = WEEK.ms_opp_order
 XD_ORDER = WEEK.xd_order
 MS_OPP_CAP = WEEK.ms_opp_cap
@@ -105,6 +106,7 @@ SC_STRONG_W = 0.05           # 最强锚点(苏陈)对手强度奖励（次级�
 SC_REPEAT_W = 1.0            # 苏陈对手组合重复惩罚（别老同一对，软）
 SC_OPP_MAX_REPEAT = 2        # 苏陈对手同一组合上限（硬：别 7 轮同一对）
 MIXED_W = 0.2                # 男双混合队(外援+内部)惩罚
+SPREAD_W = 0.5               # 搭档分散惩罚（partner_spread 球员男双搭档重复越多扣分越多，软）
 SEED_DISTINCT_W = 0.2        # 仅 ms_s 模型用（本周无种子，无效）
 COVERAGE_W = 0.5             # 互搞覆盖奖励（无合练对，无效）
 
@@ -367,6 +369,29 @@ def lineup_score(rounds, theta):
                 seen_pairs[frozenset(opp)] += 1
         total -= SC_STRONG_W * str_sum
         total += SC_REPEAT_W * sum(v - 1 for v in seen_pairs.values())
+    # 搭档分散（可记忆：陈小洪等实力弱 → 男双搭档尽量轮换不重复，软惩罚）
+    if PARTNER_SPREAD:
+        from collections import defaultdict as _dd
+        spread_partners = _dd(set)
+        for rd in rounds:
+            for m in rd["matches"]:
+                if m["type"] != "男双":
+                    continue
+                for side in (m["a"], m["b"]):
+                    if len(side) != 2:
+                        continue
+                    for p in side:
+                        if p in PARTNER_SPREAD:
+                            oth = side[1] if side[0] == p else side[0]
+                            spread_partners[p].add(oth)
+        for p in PARTNER_SPREAD:
+            n_games = sum(1 for rd in rounds for m in rd["matches"]
+                          if m["type"] == "男双"
+                          for side in (m["a"], m["b"])
+                          if p in side)
+            n_distinct = len(spread_partners.get(p, set()))
+            # 重复度 = 场次 - 不同搭档数（0 = 全不同，最佳）
+            total += SPREAD_W * max(0, n_games - n_distinct)
     if work:
         avg = sum(work.values()) / len(work)
         total += WORK_BAL_W * sum((w - avg) ** 2 for w in work.values())

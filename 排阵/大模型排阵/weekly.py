@@ -101,6 +101,8 @@ class Week:
     favor_low: list = field(default_factory=list)
     # 男双(含 sc/xl/xlp/om)场上限：{player: max}，让爱打混双的人少打男双（如 王小波）
     md_max: dict = field(default_factory=dict)
+    # 搭档分散（可记忆）：这些球员的男双搭档尽量轮换不重复（如 陈小洪 实力弱，别老配同一人）
+    partner_spread: list = field(default_factory=list)
     # {轮次: [强制打混双的男]}，如 {3:["王苏丹"]}（该轮混双固定男，θ 均衡自动配对）
     xd_incl: dict = field(default_factory=dict)
 
@@ -195,6 +197,7 @@ def _from_dict(d):
         max_pairs=list(d.get("max_pairs", [])),
         favor_low=list(pref.get("favor_low", [])),
         md_max={str(k): int(v) for k, v in pref.get("md_max", {}).items()},
+        partner_spread=list(pref.get("partner_spread", [])),
     )
 
     _check_courts_rule(d, week)
@@ -293,5 +296,7 @@ if __name__ == "__main__":
         print(f"  场次下限(mins): {w.mins}")
     if w.max_pairs:
         print(f"  同队上限: {[(list(p['pair']), p['max']) for p in w.max_pairs]}")
+    if w.partner_spread:
+        print(f"  搭档分散: {w.partner_spread}")
     print(f"  可分配池(非锚点): {w.non_anchor}")
     print(f"  内战轮: {w.duel_rounds}")

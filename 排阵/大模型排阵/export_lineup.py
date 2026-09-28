@@ -570,6 +570,20 @@ def main():
         dup += sum(x - 1 for x in c.values() if x > 1)
     print(f"  种子单打对手重复：{dup} 处（0=每个对手都不同，风格多样）"
           f"{'✓' if dup == 0 else ''}")
+    # 搭档分散（可记忆需求）：这些球员男双搭档尽量轮换不重复（如 陈小洪 实力弱）
+    for p in getattr(WEEK, "partner_spread", []):
+        partners = []
+        for rd in lineup["rounds"]:
+            for m in rd["matches"]:
+                if m["type"] != "男双":
+                    continue
+                for side in (m["a"], m["b"]):
+                    if len(side) == 2 and p in side:
+                        partners.append(side[1] if side[0] == p else side[0])
+        n = len(partners)
+        nd = len(set(partners))
+        print(f"  搭档分散 {p}：{n} 场 {nd} 个不同搭档 {'✓ 全不同' if nd == n else ''}"
+              f"{'（' + '/'.join(partners) + '）' if partners else ''}")
 
     for w in warnings:
         print(f"  ⚠️ {w}")
