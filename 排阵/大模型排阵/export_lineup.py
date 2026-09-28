@@ -307,7 +307,8 @@ def export_excel(lineup, output_path, theta_map):
     row = 3
     rounds = lineup["rounds"]
     for rd in rounds:
-        for m in rd["matches"]:
+        # 场地号从小到大输出（如 8/17/18），避免乱序看着晕
+        for m in sorted(rd["matches"], key=lambda x: x["court"]):
             ws.cell(row=row, column=1, value=rd["round"])
             ws.cell(row=row, column=2, value=f"{m['court']}号")
             ws.cell(row=row, column=3, value=m["type"])
