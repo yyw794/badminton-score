@@ -212,7 +212,8 @@ def _check_courts_rule(d, week):
 
 
 def _latest_instance_path():
-    files = sorted(INSTANCE_DIR.glob("*.json"))
+    files = sorted(p for p in INSTANCE_DIR.glob("*.json")
+                   if p.name[:1].isdigit() and p.stem.count("-") == 2)
     return files[-1] if files else None
 
 
