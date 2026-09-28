@@ -13,6 +13,10 @@
   preferences  用户指定的优先级顺序
   limits/goals 场次上下限与训练目标
 
+场地号固定规则（用户约定）：
+  2 个场地 → [17, 18]；3 个场地 → [8, 17, 18]；4 个场地 → [6, 8, 17, 18]
+  （见 COURTS_BY_COUNT / courts_for()，实例 courts 字段必须遵循）
+
 用法:
     from weekly import load
     w = load()                    # 自动取 instances/ 里日期最新的一份
@@ -27,6 +31,24 @@ from pathlib import Path
 
 BASE = Path(__file__).resolve().parent
 INSTANCE_DIR = BASE / "instances"
+
+# ================= 场地号固定规则（用户约定，勿改） =================
+#   2 个场地 → 17, 18
+#   3 个场地 → 17, 18, 8（加 8 号场地）
+#   4 个场地 → 17, 18, 8, 6（再加 6 号场地）
+# 实例里的 courts 必须按此规则填。
+COURTS_BY_COUNT = {
+    2: [17, 18],
+    3: [8, 17, 18],
+    4: [6, 8, 17, 18],
+}
+
+
+def courts_for(count):
+    """按场地数返回固定场地号列表（见 COURTS_BY_COUNT）。"""
+    if count not in COURTS_BY_COUNT:
+        raise ValueError(f"暂不支持 {count} 个场地；支持 {sorted(COURTS_BY_COUNT)} → {COURTS_BY_COUNT}")
+    return list(COURTS_BY_COUNT[count])
 
 
 @dataclass
@@ -174,6 +196,16 @@ def _from_dict(d):
         favor_low=list(pref.get("favor_low", [])),
         md_max={str(k): int(v) for k, v in pref.get("md_max", {}).items()},
     )
+
+    _check_courts_rule(d, week)
+
+
+def _check_courts_rule(d, week):
+    """场地号固定规则校验：2 场=[17,18]；3 场=[8,17,18]；4 场=[6,8,17,18]。"""
+    expected = COURTS_BY_COUNT.get(len(week.courts))
+    if expected and sorted(week.courts) != sorted(expected):
+        print(f"⚠️ 警告 [{d.get('date')}] 场地号不符合约定：courts={week.courts}"
+              f"，{len(week.courts)} 个场地应为 {expected}（见 weekly.COURTS_BY_COUNT）")
 
 
 def _latest_instance_path():

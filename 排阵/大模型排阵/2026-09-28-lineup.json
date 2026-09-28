@@ -2,9 +2,9 @@
   "title": "工会杯备战训练 2026-09-28（3场地·16人含外援女·极差1均衡版）",
   "date": "2026-09-28",
   "courts": [
-    6,
     8,
-    17
+    17,
+    18
   ],
   "caps": {
     "internal": 6,
@@ -28,7 +28,7 @@
       "round": 1,
       "matches": [
         {
-          "court": 6,
+          "court": 18,
           "type": "混双",
           "a": [
             "王苏丹",
@@ -69,7 +69,7 @@
       "round": 2,
       "matches": [
         {
-          "court": 6,
+          "court": 18,
           "type": "男单",
           "a": [
             "范智强"
@@ -108,7 +108,7 @@
       "round": 3,
       "matches": [
         {
-          "court": 6,
+          "court": 18,
           "type": "混双",
           "a": [
             "王苏丹",
@@ -149,7 +149,7 @@
       "round": 4,
       "matches": [
         {
-          "court": 6,
+          "court": 18,
           "type": "女单",
           "a": [
             "李祺祺"
@@ -188,7 +188,7 @@
       "round": 5,
       "matches": [
         {
-          "court": 6,
+          "court": 18,
           "type": "女双",
           "a": [
             "徐越",
@@ -229,7 +229,7 @@
       "round": 6,
       "matches": [
         {
-          "court": 6,
+          "court": 18,
           "type": "女双",
           "a": [
             "徐越",
@@ -270,7 +270,7 @@
       "round": 7,
       "matches": [
         {
-          "court": 6,
+          "court": 18,
           "type": "女双",
           "a": [
             "徐越",
