@@ -1,0 +1,39 @@
+{
+  "match_date": "2026-10-26",
+  "description": "工会杯赛前演练 2026-10-26（4场地·15人·唐英武缺阵版）",
+  "format": "15分/局，2局",
+  "matches": [
+    {"round": 1, "court": 6, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["罗琴荩", "王小波"], "score_a": "15:5", "score_b": "15:11"},
+    {"round": 1, "court": 8, "type": "男单", "team_a": ["范智强"], "team_b": ["严勇文"], "score_a": "15:5", "score_b": "12:15"},
+    {"round": 1, "court": 17, "type": "女双vs男双", "team_a": ["李佳琳", "林小连"], "team_b": ["陈小洪", "张欣欣"], "score_a": "4:15", "score_b": "6:15"},
+    {"round": 1, "court": 18, "type": "混双", "team_a": ["林锋", "徐越"], "team_b": ["王苏丹", "高洁"], "score_a": "15:6", "score_b": "15:11"},
+
+    {"round": 2, "court": 6, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["林锋", "陈小洪"], "score_a": "15:7", "score_b": "12:15", "notes": "OCR识别比分B为12:16，按原图更正为12:15（16分不可能）"},
+    {"round": 2, "court": 8, "type": "女单", "team_a": ["徐越"], "team_b": ["高洁"], "score_a": "10:15", "score_b": "15:14", "notes": "OCR识别比分A为16:15，按用户确认更正为10:15"},
+    {"round": 2, "court": 17, "type": "女单", "team_a": ["李佳琳"], "team_b": ["林小连"], "score_a": "9:15", "score_b": "9:15"},
+    {"round": 2, "court": 18, "type": "男双", "team_a": ["罗琴荩", "刘继宇"], "team_b": ["王小波", "张欣欣"], "score_a": "11:15", "score_b": "15:10"},
+
+    {"round": 3, "court": 6, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["陈小洪", "王小波"], "score_a": "15:4", "score_b": "15:6"},
+    {"round": 3, "court": 8, "type": "男单", "team_a": ["范智强"], "team_b": ["王苏丹"], "score_a": "15:12", "score_b": "10:15"},
+    {"round": 3, "court": 17, "type": "女单", "team_a": ["徐越"], "team_b": ["李佳琳"], "score_a": "11:15", "score_b": "11:15", "notes": "OCR识别比分B为11:13，按原图更正为11:15（原图末位为5）"},
+    {"round": 3, "court": 18, "type": "男双", "team_a": ["罗琴荩", "刘继宇"], "team_b": ["林锋", "张欣欣"], "score_a": "15:10", "score_b": "15:5"},
+
+    {"round": 4, "court": 6, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["罗琴荩", "刘继宇"], "score_a": "15:11", "score_b": "15:14"},
+    {"round": 4, "court": 8, "type": "男单", "team_a": ["严勇文"], "team_b": ["张欣欣"], "score_a": "10:15", "score_b": "15:9"},
+    {"round": 4, "court": 17, "type": "女双vs男双", "team_a": ["李佳琳", "高洁"], "team_b": ["陈小洪", "王苏丹"], "score_a": "6:15", "score_b": "11:15"},
+    {"round": 4, "court": 18, "type": "混双", "team_a": ["林锋", "徐越"], "team_b": ["王小波", "林小连"], "score_a": "15:5", "score_b": "15:5", "notes": "OCR识别比分B为15:15，按原图更正为15:5（原图末位为5）"},
+
+    {"round": 5, "court": 6, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["林锋", "陈小洪"], "score_a": "15:8", "score_b": "15:9"},
+    {"round": 5, "court": 8, "type": "男单", "team_a": ["范智强"], "team_b": ["罗琴荩"], "score_a": "8:15", "score_b": "12:15"},
+    {"round": 5, "court": 17, "type": "女双", "team_a": ["李佳琳", "高洁"], "team_b": ["徐越", "林小连"], "score_a": "14:15", "score_b": "15:9"},
+    {"round": 5, "court": 18, "type": "男双", "team_a": ["刘继宇", "王苏丹"], "team_b": ["王小波", "张欣欣"], "score_a": "14:15", "score_b": "15:11"},
+
+    {"round": 6, "court": 8, "type": "男单", "team_a": ["严勇文"], "team_b": ["王苏丹"], "score_a": "9:15", "score_b": "12:15"},
+    {"round": 6, "court": 17, "type": "女双vs男双", "team_a": ["高洁", "林小连"], "team_b": ["陈小洪", "张欣欣"], "score_a": "4:15", "score_b": "10:15"},
+    {"round": 6, "court": 18, "type": "混双", "team_a": ["林锋", "徐越"], "team_b": ["王小波", "李佳琳"], "score_a": "13:15", "score_b": "14:15"},
+
+    {"round": 7, "court": 6, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["罗琴荩", "刘继宇"], "score_a": "15:11", "score_b": "15:13"},
+    {"round": 7, "court": 8, "type": "男单", "team_a": ["范智强"], "team_b": ["陈小洪"], "score_a": "15:12", "score_b": "15:4"},
+    {"round": 7, "court": 17, "type": "女双vs混双", "team_a": ["李佳琳", "高洁"], "team_b": ["林小连", "张欣欣"], "score_a": "7:15", "score_b": "9:15"}
+  ]
+}

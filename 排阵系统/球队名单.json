@@ -1,0 +1,393 @@
+{
+  "title": "平安科技羽毛球队名单",
+  "updated": "2026-11-02",
+  "source_of_truth": true,
+  "counts": {
+    "formal": 23,
+    "trial": 1,
+    "guest": 14,
+    "total": 38
+  },
+  "members": [
+    {
+      "name": "唐英武",
+      "gender": "女",
+      "status": "正式",
+      "department": "平安科技财务部资金管理室",
+      "first_seen": "2026-06-01",
+      "last_seen": "2026-10-26",
+      "weeks_played": 10,
+      "note": ""
+    },
+    {
+      "name": "崔倩男",
+      "gender": "女",
+      "status": "正式",
+      "department": "平安科技运营事业部云产品研发部核心架构及技术运营组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-04-13",
+      "weeks_played": 1,
+      "note": "仅出现 1 次"
+    },
+    {
+      "name": "徐越",
+      "gender": "女",
+      "status": "正式",
+      "department": "平安科技运营事业部作业产品团队（深圳）智能办文产品室",
+      "first_seen": "2026-08-03",
+      "last_seen": "2026-11-02",
+      "weeks_played": 11,
+      "note": ""
+    },
+    {
+      "name": "李佳琳",
+      "gender": "女",
+      "status": "正式",
+      "department": "平安科技创新事业部数据流通赋能团队流通挖掘组",
+      "first_seen": "2026-08-24",
+      "last_seen": "2026-11-02",
+      "weeks_played": 9,
+      "note": ""
+    },
+    {
+      "name": "李祺祺",
+      "gender": "女",
+      "status": "正式",
+      "department": "平安科技运营事业部云技术支持团队方案设计组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-10-19",
+      "weeks_played": 16,
+      "note": ""
+    },
+    {
+      "name": "林小连",
+      "gender": "女",
+      "status": "正式",
+      "department": "平安科技创新事业部数据产品工具团队数据分析工具组",
+      "first_seen": "2026-06-29",
+      "last_seen": "2026-11-02",
+      "weeks_played": 11,
+      "note": ""
+    },
+    {
+      "name": "滕菲",
+      "gender": "女",
+      "status": "正式",
+      "department": "平安科技创新事业部风控AI产品团队智能模型室",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-09-28",
+      "weeks_played": 8,
+      "note": ""
+    },
+    {
+      "name": "谢卓珊",
+      "gender": "女",
+      "status": "正式",
+      "department": "平安科技运营事业部办公产品团队平安邮箱组",
+      "first_seen": "2026-07-13",
+      "last_seen": "2026-08-17",
+      "weeks_played": 3,
+      "note": ""
+    },
+    {
+      "name": "高洁",
+      "gender": "女",
+      "status": "正式",
+      "department": "平安科技运营事业部网络技术服务部产品规划组",
+      "first_seen": "2026-10-12",
+      "last_seen": "2026-10-26",
+      "weeks_played": 3,
+      "note": ""
+    },
+    {
+      "name": "严勇文",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技创新事业部语音技术团队语音识别组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-11-02",
+      "weeks_played": 19,
+      "note": ""
+    },
+    {
+      "name": "刘继宇",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技创新事业部风控AI产品团队智能模型室",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-11-02",
+      "weeks_played": 18,
+      "note": ""
+    },
+    {
+      "name": "卢志辉",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技创新事业部金融三大库个人客户数据组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-09-14",
+      "weeks_played": 13,
+      "note": ""
+    },
+    {
+      "name": "林琪琛",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技创新事业部数据平台部实时计算组",
+      "first_seen": "2026-07-06",
+      "last_seen": "2026-07-06",
+      "weeks_played": 1,
+      "note": ""
+    },
+    {
+      "name": "林锋",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技运营事业部网络技术服务部技术运维组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-11-02",
+      "weeks_played": 17,
+      "note": ""
+    },
+    {
+      "name": "王小波",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技运营事业部科技安全团队安全运营技术组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-10-26",
+      "weeks_played": 20,
+      "note": ""
+    },
+    {
+      "name": "王苏丹",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技大数据中心智能服务AI部AI保险顾研发室（筹）",
+      "first_seen": "2026-08-03",
+      "last_seen": "2026-10-26",
+      "weeks_played": 9,
+      "note": ""
+    },
+    {
+      "name": "罗琴荩",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技创新事业部数据平台部离线计算组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-11-02",
+      "weeks_played": 15,
+      "note": ""
+    },
+    {
+      "name": "苏大哲",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技运营事业部作业产品团队多模态通讯平台组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-11-02",
+      "weeks_played": 19,
+      "note": ""
+    },
+    {
+      "name": "范智强",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技运营事业部系统运维部（深圳）运维智能化平台室",
+      "first_seen": "2026-08-03",
+      "last_seen": "2026-11-02",
+      "weeks_played": 11,
+      "note": ""
+    },
+    {
+      "name": "董广博",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技运营事业部信息安全管理及运营团队安全系统运营组",
+      "first_seen": "2026-06-29",
+      "last_seen": "2026-11-02",
+      "weeks_played": 8,
+      "note": ""
+    },
+    {
+      "name": "陈小洪",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技运营事业部作业产品团队多模态通讯平台组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-11-02",
+      "weeks_played": 20,
+      "note": ""
+    },
+    {
+      "name": "陈财贵",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技运营事业部基础应用平台团队（深圳）流程AI化平台室",
+      "first_seen": "2026-06-29",
+      "last_seen": "2026-11-02",
+      "weeks_played": 13,
+      "note": ""
+    },
+    {
+      "name": "陈顺星",
+      "gender": "男",
+      "status": "正式",
+      "department": "平安科技运营事业部云技术支持团队方案设计组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-11-02",
+      "weeks_played": 11,
+      "note": ""
+    },
+    {
+      "name": "结艺頔",
+      "gender": "女",
+      "status": "试训",
+      "department": "平安科技创新事业部销售及营销AI产品团队队伍销售赋能算法室",
+      "first_seen": "2026-11-02",
+      "last_seen": "2026-11-02",
+      "weeks_played": 1,
+      "note": "2026-11-02 试赛，通过后转正"
+    },
+    {
+      "name": "张燕红",
+      "gender": "女",
+      "status": "外援",
+      "department": "",
+      "first_seen": "2026-07-06",
+      "last_seen": "2026-08-03",
+      "weeks_played": 4,
+      "note": "外援；部门可留空"
+    },
+    {
+      "name": "曹杨",
+      "gender": "女",
+      "status": "外援",
+      "department": "",
+      "first_seen": "2026-09-28",
+      "last_seen": "2026-09-28",
+      "weeks_played": 1,
+      "note": "外援；部门可留空"
+    },
+    {
+      "name": "李杏芝",
+      "gender": "女",
+      "status": "外援",
+      "department": "",
+      "first_seen": "2026-06-01",
+      "last_seen": "2026-06-01",
+      "weeks_played": 1,
+      "note": "外援；部门可留空"
+    },
+    {
+      "name": "田茜",
+      "gender": "女",
+      "status": "外援",
+      "department": "平安科技运营事业部科技安全团队科技信息组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-07-06",
+      "weeks_played": 2,
+      "note": ""
+    },
+    {
+      "name": "项小英",
+      "gender": "女",
+      "status": "外援",
+      "department": "",
+      "first_seen": "2026-06-01",
+      "last_seen": "2026-09-28",
+      "weeks_played": 4,
+      "note": "外援；部门可留空"
+    },
+    {
+      "name": "刘海锐",
+      "gender": "男",
+      "status": "外援",
+      "department": "",
+      "first_seen": "2026-08-31",
+      "last_seen": "2026-09-07",
+      "weeks_played": 2,
+      "note": "外援；部门可留空"
+    },
+    {
+      "name": "卢子龙",
+      "gender": "男",
+      "status": "外援",
+      "department": "",
+      "first_seen": "",
+      "last_seen": "",
+      "weeks_played": 0,
+      "note": "名单里有，但从未出场"
+    },
+    {
+      "name": "吴煜",
+      "gender": "男",
+      "status": "外援",
+      "department": "",
+      "first_seen": "",
+      "last_seen": "",
+      "weeks_played": 0,
+      "note": "名单里有，但从未出场"
+    },
+    {
+      "name": "张欣欣",
+      "gender": "男",
+      "status": "外援",
+      "department": "",
+      "first_seen": "2026-07-06",
+      "last_seen": "2026-11-02",
+      "weeks_played": 10,
+      "note": "外援；部门可留空"
+    },
+    {
+      "name": "江锐",
+      "gender": "男",
+      "status": "外援",
+      "department": "平安科技运营事业部办公产品团队平安邮箱组",
+      "first_seen": "",
+      "last_seen": "",
+      "weeks_played": 0,
+      "note": "名单里有，但从未出场"
+    },
+    {
+      "name": "程建兴",
+      "gender": "男",
+      "status": "外援",
+      "department": "",
+      "first_seen": "2026-06-01",
+      "last_seen": "2026-09-14",
+      "weeks_played": 10,
+      "note": "外援；部门可留空"
+    },
+    {
+      "name": "罗蒙",
+      "gender": "男",
+      "status": "外援",
+      "department": "平安科技运营事业部客户渠道平台团队营销工具组",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-09-28",
+      "weeks_played": 12,
+      "note": ""
+    },
+    {
+      "name": "陈宇霆",
+      "gender": "男",
+      "status": "外援",
+      "department": "",
+      "first_seen": "",
+      "last_seen": "",
+      "weeks_played": 0,
+      "note": "名单里有，但从未出场"
+    },
+    {
+      "name": "黄冬青",
+      "gender": "男",
+      "status": "外援",
+      "department": "",
+      "first_seen": "2026-04-13",
+      "last_seen": "2026-10-12",
+      "weeks_played": 8,
+      "note": "外援；部门可留空"
+    }
+  ]
+}

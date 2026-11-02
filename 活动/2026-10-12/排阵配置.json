@@ -1,0 +1,173 @@
+{
+  "_note": "手工争位战版：5人男双大循环(刘罗严范王)选男双二 + 罗范男单后置R7 + 刘王混双PK R5 + 林锋只混双(配徐越)含2场混v男对抗弱男双 + 王苏丹混双R1；高洁只女双。名单17人3场地。手工对阵，非求解器产物。",
+  "date": "2026-10-12",
+  "title": "工会杯备战训练 2026-10-12（5人男双大循环 + 林锋只混双·混v男对抗 + 罗范单打后置）",
+  "courts": [
+    8,
+    17,
+    18
+  ],
+  "rounds_count": 7,
+  "roster": {
+    "internal_male": [
+      "苏大哲",
+      "严勇文",
+      "范智强",
+      "王苏丹",
+      "罗琴荩",
+      "陈小洪",
+      "刘继宇",
+      "王小波",
+      "林锋",
+      "陈财贵"
+    ],
+    "female": [
+      "林小连",
+      "李祺祺",
+      "高洁",
+      "徐越",
+      "李佳琳"
+    ],
+    "guest": [
+      "张欣欣",
+      "黄冬青"
+    ]
+  },
+  "roles": {
+    "anchors": [
+      [
+        "苏大哲",
+        "陈财贵"
+      ]
+    ],
+    "seeds": [],
+    "ms_pair": [],
+    "ws_pair": [],
+    "xl_anchor": "",
+    "xl_partner": [],
+    "sc_opp_pool": [],
+    "xd_women": [
+      "李祺祺",
+      "徐越"
+    ],
+    "wd_sides": {},
+    "ms_opp_internal": [],
+    "xd_prefer": [
+      "林锋",
+      "刘继宇",
+      "王小波",
+      "严勇文",
+      "罗琴荩",
+      "陈小洪"
+    ]
+  },
+  "structure": {
+    "sc_rounds": [
+      1,
+      3,
+      4,
+      5,
+      6
+    ],
+    "xl_rounds": [],
+    "duel_rounds": [],
+    "reshuffle_rounds": [],
+    "reshuffle_teams": [],
+    "rounds": {
+      "1": {
+        "ms": false,
+        "ws": false,
+        "xd": true,
+        "wd": false,
+        "om": false
+      },
+      "2": {
+        "ms": false,
+        "ws": false,
+        "xd": true,
+        "wd": true,
+        "om": false
+      },
+      "3": {
+        "ms": false,
+        "ws": false,
+        "xd": true,
+        "wd": false,
+        "om": false
+      },
+      "4": {
+        "ms": false,
+        "ws": false,
+        "xd": false,
+        "wd": true,
+        "om": false
+      },
+      "5": {
+        "ms": false,
+        "ws": false,
+        "xd": true,
+        "wd": false,
+        "om": false
+      },
+      "6": {
+        "ms": false,
+        "ws": false,
+        "xd": true,
+        "wd": true,
+        "om": false
+      },
+      "7": {
+        "ms": true,
+        "ws": false,
+        "xd": true,
+        "wd": true,
+        "om": false
+      }
+    }
+  },
+  "preferences": {
+    "ms_opp_order": {},
+    "xd_order": {
+      "林锋": 0
+    },
+    "ms_opp_cap": 2
+  },
+  "limits": {
+    "cap": 6,
+    "min_cap": 3,
+    "caps": {
+      "internal": 6,
+      "guest": 6
+    },
+    "spread_max": 2
+  },
+  "goals": {
+    "anchor_pair_min": [
+      {
+        "pair": [
+          "苏大哲",
+          "陈财贵"
+        ],
+        "min": 3
+      }
+    ],
+    "xd_min": [
+      {
+        "player": "林锋",
+        "min": 1
+      }
+    ],
+    "ws_count": 0,
+    "seed_ms_min": 0
+  },
+  "pairs": [],
+  "max_pairs": [
+    {
+      "pair": [
+        "王小波",
+        "陈小洪"
+      ],
+      "max": 1
+    }
+  ]
+}

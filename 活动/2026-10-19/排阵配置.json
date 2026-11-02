@@ -1,0 +1,197 @@
+{
+  "_note": "工会杯备战·排阵要求版v10·4场地16人·能量极差2(8~6)：女双三对测评(林唐R1真打/唐高R3真打/林高4场)；罗琴荩王/董/刘三搭档各2场+男单1；李祺只女单4场；范只男单R1严/R3董/R5张/R7刘；王小波混侧R2/R4/R6/R7=4场纯混+男单R5；唐英武女双2场满足女双准备；苏陈锚点7场。手工对阵手排非求解器产物。",
+  "date": "2026-10-19",
+  "title": "工会杯备战训练 2026-10-19（4场地·16人·女双三对测评·能量极差2）",
+  "courts": [6, 8, 17, 18],
+  "rounds_count": 7,
+  "roster": {
+    "internal_male": [
+      "苏大哲",
+      "严勇文",
+      "范智强",
+      "陈小洪",
+      "罗琴荩",
+      "王苏丹",
+      "刘继宇",
+      "董广博",
+      "林锋",
+      "王小波"
+    ],
+    "female": [
+      "林小连",
+      "徐越",
+      "唐英武",
+      "高洁",
+      "李祺祺"
+    ],
+    "guest": [
+      "张欣欣"
+    ]
+  },
+  "roles": {
+    "anchors": [
+      [
+        "苏大哲",
+        "陈小洪"
+      ]
+    ],
+    "seeds": [],
+    "ms_pair": [],
+    "ws_pair": [
+      "唐英武",
+      "李祺祺"
+    ],
+    "xl_anchor": "罗琴荩",
+    "xl_partner": [
+      "王苏丹",
+      "刘继宇"
+    ],
+    "xd_women": [
+      "徐越",
+      "唐英武"
+    ],
+    "wd_sides": {
+      "女双": [
+        "唐英武",
+        "林小连"
+      ],
+      "混双": [
+        "高洁"
+      ]
+    },
+    "ms_opp_internal": [],
+    "xd_prefer": [
+      "林锋",
+      "王小波"
+    ]
+  },
+  "structure": {
+    "sc_rounds": [1, 2, 3, 4, 5, 6, 7],
+    "xl_rounds": [1, 2, 3, 4, 5, 6, 7],
+    "duel_rounds": [],
+    "reshuffle_rounds": [],
+    "reshuffle_teams": [],
+    "xd_incl": {
+      "1": [],
+      "2": ["王小波"],
+      "3": [],
+      "4": ["王小波"],
+      "5": [],
+      "6": ["王小波"],
+      "7": ["王小波"]
+    },
+    "rounds": {
+      "1": {
+        "ms": true,
+        "ws": false,
+        "xd": false,
+        "wd": true,
+        "wd_xd": false,
+        "om": false,
+        "wd_sides": {"女双": ["林小连", "唐英武"], "混双": ["徐越", "高洁"]},
+        "xd_women": []
+      },
+      "2": {
+        "ms": false,
+        "ws": true,
+        "xd": false,
+        "wd": false,
+        "wd_xd": true,
+        "om": false,
+        "wd_sides": {"女双": ["林小连", "高洁"], "混双": ["王小波"]},
+        "xd_women": ["唐英武"]
+      },
+      "3": {
+        "ms": true,
+        "ws": false,
+        "xd": false,
+        "wd": true,
+        "wd_xd": false,
+        "om": false,
+        "wd_sides": {"女双": ["唐英武", "高洁"], "混双": ["徐越", "林小连"]},
+        "xd_women": []
+      },
+      "4": {
+        "ms": false,
+        "ws": true,
+        "xd": false,
+        "wd": false,
+        "wd_xd": true,
+        "om": false,
+        "wd_sides": {"女双": ["林小连", "高洁"], "混双": ["王小波"]},
+        "xd_women": ["徐越"]
+      },
+      "5": {
+        "ms": true,
+        "ws": false,
+        "xd": false,
+        "wd": false,
+        "wd_xd": false,
+        "om": false,
+        "wd_sides": {},
+        "xd_women": []
+      },
+      "6": {
+        "ms": false,
+        "ws": true,
+        "xd": false,
+        "wd": false,
+        "wd_xd": true,
+        "om": false,
+        "wd_sides": {"女双": ["林小连", "高洁"], "混双": ["王小波"]},
+        "xd_women": ["唐英武"]
+      },
+      "7": {
+        "ms": true,
+        "ws": true,
+        "xd": false,
+        "wd": false,
+        "wd_xd": true,
+        "om": false,
+        "wd_sides": {"女双": ["林小连", "高洁"], "混双": ["王小波"]},
+        "xd_women": ["徐越"]
+      }
+    }
+  },
+  "preferences": {
+    "ms_opp_order": {},
+    "xd_order": {
+      "林锋": 0,
+      "王小波": 1
+    },
+    "ms_opp_cap": 2,
+    "favor_low": []
+  },
+  "limits": {
+    "cap": 7,
+    "min_cap": 7,
+    "caps": {
+      "internal": 7,
+      "guest": 7
+    },
+    "spread_max": 0,
+    "mins": {}
+  },
+  "goals": {
+    "anchor_pair_min": [
+      {
+        "pair": ["苏大哲", "陈小洪"],
+        "min": 6
+      }
+    ],
+    "xd_min": [
+      {
+        "player": "林锋",
+        "min": 1
+      },
+      {
+        "player": "王小波",
+        "min": 1
+      }
+    ],
+    "ws_count": 4,
+    "seed_ms_min": 0
+  },
+  "pairs": [],
+  "max_pairs": []
+}

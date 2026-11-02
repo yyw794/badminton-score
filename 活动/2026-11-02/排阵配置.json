@@ -1,0 +1,327 @@
+{
+  "_note": "本周人员指令：范智强主打男单、必须打混双、最次男双；林锋、陈财贵打男单；严勇文今晚不打单打；苏大哲+罗琴荩今晚固定搭2场男双；董广博主打男双、其次混双、不排男单；李佳琳女双/女单尽量各半（女单保持1场）。男单：R2 范智强/陈财贵、R4 范智强/林锋、R6 林锋/刘继宇、R7 苏大哲/罗琴荩。混双：R6 强制范智强上。",
+  "date": "2026-11-02",
+  "title": "工会杯后自由搭档 2026-11-02（3场地·15人·女双轮转+男单4场+角色偏好·能量极差1）",
+  "courts": [
+    8,
+    17,
+    18
+  ],
+  "rounds_count": 7,
+  "roster": {
+    "internal_male": [
+      "严勇文",
+      "陈小洪",
+      "范智强",
+      "陈顺星",
+      "林锋",
+      "陈财贵",
+      "罗琴荩",
+      "苏大哲",
+      "董广博",
+      "刘继宇"
+    ],
+    "female": [
+      "徐越",
+      "林小连",
+      "结艺頔",
+      "李佳琳"
+    ],
+    "guest": [
+      "张欣欣"
+    ]
+  },
+  "roles": {
+    "anchors": [],
+    "seeds": [],
+    "ms_pair": [
+      "陈财贵",
+      "刘继宇"
+    ],
+    "ws_pair": [
+      "结艺頔",
+      "李佳琳"
+    ],
+    "xl_anchor": "",
+    "xl_partner": [],
+    "xd_women": [
+      "徐越",
+      "结艺頔"
+    ],
+    "wd_sides": {},
+    "ms_opp_internal": [],
+    "xd_prefer": [
+      "林锋"
+    ]
+  },
+  "structure": {
+    "sc_rounds": [],
+    "xl_rounds": [],
+    "duel_rounds": [],
+    "reshuffle_rounds": [],
+    "reshuffle_teams": [],
+    "xd_incl": {
+      "6": [
+        "范智强"
+      ]
+    },
+    "rounds": {
+      "1": {
+        "ms": false,
+        "ws": false,
+        "xd": false,
+        "wd": true,
+        "wd_xd": false,
+        "om": true,
+        "om2": true,
+        "wd_sides": {
+          "女双": [
+            "徐越",
+            "结艺頔"
+          ],
+          "女双对": [
+            "林小连",
+            "李佳琳"
+          ]
+        }
+      },
+      "2": {
+        "ms": true,
+        "ms_pair": [
+          "范智强",
+          "陈财贵"
+        ],
+        "ws": false,
+        "xd": true,
+        "wd": false,
+        "wd_xd": false,
+        "om": true,
+        "om2": false,
+        "xd_women": [
+          "结艺頔",
+          "徐越"
+        ]
+      },
+      "3": {
+        "ms": false,
+        "ws": false,
+        "xd": false,
+        "wd": true,
+        "wd_xd": false,
+        "om": true,
+        "om2": true,
+        "wd_sides": {
+          "女双": [
+            "徐越",
+            "林小连"
+          ],
+          "女双对": [
+            "结艺頔",
+            "李佳琳"
+          ]
+        }
+      },
+      "4": {
+        "ms": true,
+        "ms_pair": [
+          "范智强",
+          "林锋"
+        ],
+        "ws": false,
+        "xd": true,
+        "wd": false,
+        "wd_xd": false,
+        "om": true,
+        "om2": false,
+        "xd_women": [
+          "林小连",
+          "李佳琳"
+        ]
+      },
+      "5": {
+        "ms": false,
+        "ws": false,
+        "xd": false,
+        "wd": true,
+        "wd_xd": false,
+        "om": true,
+        "om2": true,
+        "wd_sides": {
+          "女双": [
+            "徐越",
+            "李佳琳"
+          ],
+          "女双对": [
+            "林小连",
+            "结艺頔"
+          ]
+        }
+      },
+      "6": {
+        "ms": true,
+        "ms_pair": [
+          "林锋",
+          "刘继宇"
+        ],
+        "ws": false,
+        "xd": true,
+        "wd": false,
+        "wd_xd": false,
+        "om": true,
+        "om2": false,
+        "xd_women": [
+          "徐越",
+          "林小连"
+        ]
+      },
+      "7": {
+        "ms": true,
+        "ms_pair": [
+          "苏大哲",
+          "罗琴荩"
+        ],
+        "ws": true,
+        "xd": false,
+        "wd": false,
+        "wd_xd": false,
+        "om": true,
+        "om2": false
+      }
+    }
+  },
+  "preferences": {
+    "ms_opp_order": {},
+    "xd_order": {
+      "范智强": 0,
+      "陈财贵": 0,
+      "林锋": 1,
+      "董广博": 1,
+      "苏大哲": 5,
+      "陈小洪": 6,
+      "陈顺星": 6,
+      "严勇文": 8,
+      "罗琴荩": 8,
+      "刘继宇": 8,
+      "张欣欣": 8
+    },
+    "favor_low": [],
+    "md_max": {},
+    "partner_spread": [
+      "严勇文",
+      "陈小洪",
+      "范智强",
+      "陈顺星",
+      "林锋",
+      "陈财贵",
+      "罗琴荩",
+      "苏大哲",
+      "董广博",
+      "刘继宇",
+      "张欣欣"
+    ],
+    "ms_opp_cap": 2
+  },
+  "limits": {
+    "cap": 6,
+    "min_cap": 4,
+    "caps": {
+      "internal": 6,
+      "guest": 6
+    },
+    "spread_max": 1
+  },
+  "goals": {
+    "anchor_pair_min": [],
+    "xd_min": [
+      {
+        "player": "林锋",
+        "min": 1
+      }
+    ],
+    "ws_count": 1,
+    "seed_ms_min": 0
+  },
+  "pairs": [],
+  "max_pairs": [
+    {
+      "pair": [
+        "苏大哲",
+        "陈财贵"
+      ],
+      "max": 0
+    },
+    {
+      "pair": [
+        "苏大哲",
+        "刘继宇"
+      ],
+      "max": 1
+    },
+    {
+      "pair": [
+        "苏大哲",
+        "张欣欣"
+      ],
+      "max": 1
+    },
+    {
+      "pair": [
+        "林锋",
+        "张欣欣"
+      ],
+      "max": 1
+    },
+    {
+      "pair": [
+        "陈小洪",
+        "陈顺星"
+      ],
+      "max": 1
+    },
+    {
+      "pair": [
+        "陈小洪",
+        "罗琴荩"
+      ],
+      "max": 1
+    },
+    {
+      "pair": [
+        "陈财贵",
+        "刘继宇"
+      ],
+      "max": 1
+    },
+    {
+      "pair": [
+        "罗琴荩",
+        "董广博"
+      ],
+      "max": 1
+    },
+    {
+      "pair": [
+        "董广博",
+        "陈顺星"
+      ],
+      "max": 1
+    },
+    {
+      "pair": [
+        "陈财贵",
+        "张欣欣"
+      ],
+      "max": 1
+    }
+  ],
+  "fixed_md": {
+    "1": [
+      "苏大哲",
+      "罗琴荩"
+    ],
+    "3": [
+      "苏大哲",
+      "罗琴荩"
+    ]
+  }
+}

@@ -15,7 +15,7 @@ Parse badminton match score images using PaddleOCR, copy OCR results exactly int
 
 ## Prerequisites
 
-All scripts are located in the `scores/` directory. Execute commands from the project root directory.
+All scripts are located in the `比分分析/` directory. Execute commands from the project root directory.
 
 Known players (for reference only):
 - Male: 苏大哲, 罗蒙, 江锐, 严勇文, 陈顺星, 陈小洪, 卢志辉, 林锋, 王小波, 刘继宇, 董广博, 林琪琛, 罗琴荩, 张欣欣, 黄冬青, 程建兴, 陈宇霆, 卢子龙, 吴煜
@@ -28,10 +28,10 @@ Known players (for reference only):
 Run PaddleOCR on the score image:
 
 ```bash
-python3 scores/paddleocr_vl.py <image_path>
+python3 比分分析/paddleocr_vl.py <image_path>
 ```
 
-Output is saved to `scores/<date>/output_<date>/doc_0.md`.
+Output is saved to `活动/<date>/比分/output_<date>/doc_0.md`.
 
 ### Step 2: Read OCR Results
 
@@ -59,7 +59,7 @@ The only modifications allowed are:
 
 ### Step 4: Create match_data.json
 
-Create the JSON file at `scores/<date>/match_data.json` following this format:
+Create the JSON file at `活动/<date>/比分/match_data.json` following this format:
 
 ```json
 {
@@ -107,7 +107,7 @@ for m in data['matches']:
         elif a != 15 and b != 15:
             print('异常 R%sC%s 局%s: %s 双方均未达 15 分 (%s vs %s)' % (r, c, g, s, ta, tb)); issues += 1
 print('检查完成: 共 %s 局, 异常 %s 个' % (len(data['matches'])*2, issues))
-" "scores/<date>/match_data.json"
+" "活动/<date>/比分/match_data.json"
 ```
 
 有异常时：逐一向用户确认实际比分 → 修正 match_data.json → 重跑检查直到 0 异常 → 再计算统计（若已算过，修正后必须全部重算）。
@@ -115,17 +115,17 @@ print('检查完成: 共 %s 局, 异常 %s 个' % (len(data['matches'])*2, issue
 ### Step 5: Calculate Statistics
 
 ```bash
-python3 scores/calculate_stats.py scores/<date>/match_data.json
+python3 比分分析/calculate_stats.py 活动/<date>/比分/match_data.json
 ```
 
-Note: Always specify the path explicitly, as the script defaults to the latest match_data.json in scores/ directory.
+Note: Always specify the path explicitly, as the script defaults to the latest `活动/*/比分/match_data.json`.
 
 ### Step 6 (Optional): Advanced Analysis — Teammate Quality (队友含金量)
 
 Run this to determine whether high-ranked players got there by carrying weak teammates or by riding on strong teammates' coattails.
 
 ```bash
-python3 scores/teammate_analysis.py scores/<date>/match_data.json
+python3 比分分析/teammate_analysis.py 活动/<date>/比分/match_data.json
 ```
 
 **How it works:**
@@ -141,7 +141,7 @@ python3 scores/teammate_analysis.py scores/<date>/match_data.json
 Run this to find underdog wins, players who consistently outperform expectations, and pairs with great chemistry.
 
 ```bash
-python3 scores/upset_analysis.py scores/<date>/match_data.json
+python3 比分分析/upset_analysis.py 活动/<date>/比分/match_data.json
 ```
 
 **How it works:**
@@ -161,7 +161,7 @@ python3 scores/upset_analysis.py scores/<date>/match_data.json
 Run this to produce a fairer ranking that blends raw win rate with opponent difficulty and teammate carry/coattail factors — so that players who win by carrying weaker teammates get bumped up, while players who win only against weak opponents or ride strong teammates get corrected down.
 
 ```bash
-python3 scores/weighted_rank.py scores/<date>/match_data.json
+python3 比分分析/weighted_rank.py 活动/<date>/比分/match_data.json
 ```
 
 **How it works (v3 balanced formula, 65% / 20% / 15%):**
@@ -186,7 +186,7 @@ python3 scores/weighted_rank.py scores/<date>/match_data.json
 Remove intermediate files from the output directory:
 
 ```bash
-rm -rf scores/<date>/output_<date>
+rm -rf 活动/<date>/比分/output_<date>
 ```
 
 Only keep: original image + match_data.json

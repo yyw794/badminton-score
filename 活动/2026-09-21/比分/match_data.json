@@ -1,0 +1,28 @@
+{
+  "match_date": "2026-09-21",
+  "description": "工会杯备战训练 2026-09-21（3场地 · 14人均衡版）",
+  "format": "15分/局，2局",
+  "matches": [
+    {"round": 1, "court": 8, "type": "男单", "team_a": ["范智强"], "team_b": ["罗琴荩"], "score_a": "8:15", "score_b": "13:15"},
+    {"round": 1, "court": 17, "type": "混双", "team_a": ["王小波", "徐越"], "team_b": ["陈小洪", "李佳琳"], "score_a": "15:10", "score_b": "15:10"},
+    {"round": 1, "court": 18, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["林锋", "罗蒙"], "score_a": "14:15", "score_b": "15:10"},
+    {"round": 2, "court": 8, "type": "女单", "team_a": ["徐越"], "team_b": ["李祺祺"], "score_a": "10:15", "score_b": "9:15"},
+    {"round": 2, "court": 17, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["林锋", "范智强"], "score_a": "15:8", "score_b": "15:10"},
+    {"round": 2, "court": 18, "type": "男双", "team_a": ["严勇文", "陈顺星"], "team_b": ["张欣欣", "罗蒙"], "score_a": "15:9", "score_b": "12:15"},
+    {"round": 3, "court": 8, "type": "混双", "team_a": ["罗琴荩", "李祺祺"], "team_b": ["张欣欣", "李佳琳"], "score_a": "15:8", "score_b": "9:15"},
+    {"round": 3, "court": 17, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["林锋", "范智强"], "score_a": "15:8", "score_b": "15:9"},
+    {"round": 3, "court": 18, "type": "男双", "team_a": ["严勇文", "陈顺星"], "team_b": ["陈小洪", "王小波"], "score_a": "15:9", "score_b": "15:12"},
+    {"round": 4, "court": 8, "type": "男单", "team_a": ["范智强"], "team_b": ["罗琴荩"], "score_a": "15:10", "score_b": "15:14"},
+    {"round": 4, "court": 17, "type": "女双vs混双", "team_a": ["李佳琳", "徐越"], "team_b": ["王小波", "李祺祺"], "score_a": "15:12", "score_b": "6:15"},
+    {"round": 4, "court": 18, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["罗蒙", "林锋"], "score_a": "15:10", "score_b": "15:13"},
+    {"round": 5, "court": 8, "type": "女单", "team_a": ["徐越"], "team_b": ["李祺祺"], "score_a": "15:11", "score_b": "3:15"},
+    {"round": 5, "court": 17, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["林锋", "陈小洪"], "score_a": "14:15", "score_b": "12:15"},
+    {"round": 5, "court": 18, "type": "男双", "team_a": ["严勇文", "罗琴荩"], "team_b": ["陈顺星", "张欣欣"], "score_a": "15:6", "score_b": "15:10"},
+    {"round": 6, "court": 8, "type": "混双", "team_a": ["陈顺星", "徐越"], "team_b": ["王小波", "李佳琳"], "score_a": "15:12", "score_b": "15:12"},
+    {"round": 6, "court": 17, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["陈小洪", "林锋"], "score_a": "15:8", "score_b": "15:10"},
+    {"round": 6, "court": 18, "type": "男双", "team_a": ["严勇文", "罗琴荩"], "team_b": ["罗蒙", "张欣欣"], "score_a": "15:10", "score_b": "15:12"},
+    {"round": 7, "court": 8, "type": "混双", "team_a": ["陈小洪", "李祺祺"], "team_b": ["陈顺星", "李佳琳"], "score_a": "15:11", "score_b": "15:10"},
+    {"round": 7, "court": 17, "type": "男双", "team_a": ["苏大哲", "陈财贵"], "team_b": ["林锋", "王小波"], "score_a": "15:11", "score_b": "15:14"},
+    {"round": 7, "court": 18, "type": "男双", "team_a": ["严勇文", "范智强"], "team_b": ["罗蒙", "张欣欣"], "score_a": "10:15", "score_b": "15:14"}
+  ]
+}
