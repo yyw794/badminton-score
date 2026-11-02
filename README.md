@@ -24,16 +24,14 @@
 │   ├── sync_roster.py            # 接龙 → 排阵配置
 │   ├── paths.py                  # 统一路径
 │   ├── excel_exporter.py         # 共享球员名单
-│   └── player_departments.json   # 签到表部门映射（空缺可补）
+│   └── 球队名单.json             # 权威名单（正式/试训/外援 + 部门）
 ├── 比分分析/                     # 赛后统计/OCR/排名脚本
 │   ├── calculate_stats.py
 │   ├── paddleocr_vl.py
 │   ├── bt/                       # 全局 BT 实力数据
 │   └── history/                  # 更早的历史比分
-├── 报名/                         # 早期报名表归档
 ├── 工会杯/                       # 工会杯专项资料
 ├── 物料需求/                     # 活动物料表
-├── docs/                         # Web 记分/展示页面
 └── README.md
 ```
 
@@ -84,12 +82,6 @@
 - 固定搭档、合练对、同队上限、保底场次都在 `排阵配置.json` 里配置。
 
 详细算法见 `排阵系统/求解器算法设计.md`，每周需求模板见 `活动/_模板/02_排阵需求.txt`。
-
-## 📱 Web 记分
-
-- 在线访问：https://yyw794.github.io/badminton-score/
-- 本地打开：`open docs/index.html`
-- 部署：把 `docs/` 推到 GitHub Pages 即可。
 
 ## 🔗 相关文档
 

@@ -2,7 +2,7 @@
 """球队名单 / 部门映射。
 
 权威名单：排阵系统/球队名单.json（用户确认过的版本）。
-兼容旧文件：player_departments.json、报名/签到表.xlsx（仅兜底，不覆盖权威名单）。
+兼容旧文件：player_departments.json（仅兜底，不覆盖权威名单）。
 """
 import json
 from pathlib import Path
@@ -10,7 +10,6 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent
 ROSTER_JSON = BASE / "球队名单.json"
 DEPARTMENTS_JSON = BASE / "player_departments.json"
-LEGACY_SIGN_XLSX = BASE.parent / "报名" / "签到表.xlsx"
 
 
 def load_roster() -> dict:
@@ -39,22 +38,6 @@ def load_departments() -> dict[str, str]:
             for name, dept in old.items():
                 if name and dept and not data.get(str(name)):
                     data[str(name)] = str(dept)
-        except Exception:
-            pass
-
-    # 3) 更早的签到表兜底（不覆盖）
-    if LEGACY_SIGN_XLSX.exists():
-        try:
-            import openpyxl
-            wb = openpyxl.load_workbook(LEGACY_SIGN_XLSX, read_only=True, data_only=True)
-            ws = wb.active
-            for row in ws.iter_rows(min_row=3, max_col=4, values_only=True):
-                if not row:
-                    continue
-                name, dept = row[0], row[1]
-                if name and dept and not data.get(str(name)):
-                    data[str(name)] = str(dept)
-            wb.close()
         except Exception:
             pass
 
